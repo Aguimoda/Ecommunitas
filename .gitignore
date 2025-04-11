@@ -1,0 +1,71 @@
+# Root ignores
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Dependency directories (handles all levels)
+**/node_modules/
+**/jspm_packages/
+
+# Build artifacts (handles all levels)
+**/dist/
+**/build/
+**/out/
+**/.cache/
+**/.temp/
+
+# Coverage reports
+**/coverage/
+**/*.lcov
+
+# Logs
+**/logs/
+**/*.log
+
+# Environment files (all levels)
+**/.env
+**/.env.local
+**/.env.development
+**/.env.test
+**/.env.production
+
+# System files
+ehthumbs.db
+[Tt]humbs.db
+
+# Editor directories and files
+**/.vscode/
+**/.history/
+**/*.swp
+**/*.swo
+
+# Vite specific
+**/.vite/
+**/manifest.json
+
+# Documentation
+**/docs/
+**/doc/
+**/docs-generated/
+
+# Testing
+**/cypress/videos/
+**/cypress/screenshots/
+**/test-results/

@@ -1,0 +1,30 @@
+{
+  "name": "ecommunitas",
+  "version": "1.0.0",
+  "description": "Plataforma de trueque local para fomentar la economía circular",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "trueque",
+    "economía circular",
+    "sostenibilidad",
+    "comunidad"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
