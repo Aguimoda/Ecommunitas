@@ -26,5 +26,8 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "vue-toastification": "^1.7.14"
   }
 }
