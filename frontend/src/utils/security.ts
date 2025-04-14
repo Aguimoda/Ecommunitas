@@ -55,7 +55,7 @@ export function configureSecurity(config: SecurityConfig) {
         directives.push(`script-src 'nonce-${config.cspNonce}' 'strict-dynamic' 'unsafe-inline' 'self'`)
         directives.push(`style-src 'nonce-${config.cspNonce}' 'unsafe-inline' 'self'`)
         directives.push('worker-src blob:')
-        directives.push('manifest-src ''self')
+        directives.push('manifest-src \'self\'')
         directives.push('upgrade-insecure-requests')
         directives.push('block-all-mixed-content')
       }
