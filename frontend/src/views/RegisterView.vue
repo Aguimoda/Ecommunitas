@@ -267,7 +267,7 @@ const handleSubmit = async () => {
     isLoading.value = true
     error.value = ''
     
-    const response = await axios.post('/api/auth/register', {
+    const response = await axios.post('/api/v1/auth/register', {
       name: name.value,
       email: email.value,
       password: password.value
@@ -280,8 +280,18 @@ const handleSubmit = async () => {
     router.push('/login')
     // Nota: Podríamos mostrar un mensaje de éxito antes de redirigir
   } catch (err) {
-    error.value = 'Error en el registro'
+    if (err.response && err.response.data && err.response.data.message) {
+      // Mostrar el mensaje de error específico del backend
+      error.value = err.response.data.message
+    } else if (err.response && err.response.status === 400) {
+      error.value = 'Datos de registro inválidos. Por favor, verifica la información.'
+    } else if (err.response && err.response.status === 409) {
+      error.value = 'El email ya está registrado. Por favor, utiliza otro email.'
+    } else {
+      error.value = 'Error en el registro. Por favor, intenta nuevamente más tarde.'
+    }
     console.error('Error de registro:', err)
+    isLoading.value = false
   }
 }
 </script>

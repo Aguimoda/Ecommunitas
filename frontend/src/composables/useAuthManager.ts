@@ -145,7 +145,7 @@ function createAuthManager(customOptions: Partial<AuthOptions> = {}) {
       state.value.isLoading = true
       state.value.error = null
       
-      const response = await axios.get(`${options.apiBaseUrl}/user/profile`)
+      const response = await axios.get(`${options.apiBaseUrl}/v1/auth/me`)
       state.value.user = response.data
       updateActivity()
       return response.data
@@ -180,7 +180,7 @@ function createAuthManager(customOptions: Partial<AuthOptions> = {}) {
       state.value.isLoading = true
       state.value.error = null
       
-      const response = await axios.post(`${options.apiBaseUrl}/auth/login`, credentials)
+      const response = await axios.post(`${options.apiBaseUrl}/v1/auth/login`, credentials)
       
       // Guardar token y configurar estado
       saveToken(response.data.token)
@@ -220,7 +220,7 @@ function createAuthManager(customOptions: Partial<AuthOptions> = {}) {
       state.value.isLoading = true
       state.value.error = null
       
-      const response = await axios.post(`${options.apiBaseUrl}/auth/register`, credentials)
+      const response = await axios.post(`${options.apiBaseUrl}/v1/auth/register`, credentials)
       
       // Guardar token y configurar estado
       saveToken(response.data.token)

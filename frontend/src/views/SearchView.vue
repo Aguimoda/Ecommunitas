@@ -2,127 +2,12 @@
   <div class="min-h-screen bg-gray-50 p-6">
     <h1 class="text-3xl font-bold text-center mb-8">Buscar Artículos</h1>
     
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Buscar:</label>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="searchQuery" 
-              placeholder="Buscar artículos..."
-              @keyup.enter="searchItems"
-              aria-label="Buscar artículos"
-              autocomplete="off"
-              class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría:</label>
-          <select 
-            id="category" 
-            v-model="selectedCategory"
-            aria-label="Filtrar por categoría"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">Todas las categorías</option>
-            <option value="ropa">Ropa</option>
-            <option value="electronica">Electrónica</option>
-            <option value="hogar">Hogar</option>
-            <option value="libros">Libros</option>
-            <option value="deportes">Deportes</option>
-            <option value="juguetes">Juguetes</option>
-            <option value="otros">Otros</option>
-          </select>
-        </div>
-        
-        <div>
-          <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Ubicación:</label>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="location" 
-              v-model="selectedLocation" 
-              placeholder="Filtrar por ubicación"
-              @keyup.enter="searchItems"
-              aria-label="Filtrar por ubicación"
-              autocomplete="off"
-              class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="condition" class="block text-sm font-medium text-gray-700 mb-1">Condición:</label>
-          <select 
-            id="condition" 
-            v-model="selectedCondition"
-            aria-label="Filtrar por condición"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">Todas las condiciones</option>
-            <option value="nuevo">Nuevo</option>
-            <option value="bueno">Buen estado</option>
-            <option value="usado">Usado</option>
-          </select>
-        </div>
-        
-        <div>
-          <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Ordenar por:</label>
-          <select 
-            id="sort" 
-            v-model="sortBy"
-            aria-label="Ordenar resultados"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="recent">Más recientes</option>
-            <option value="oldest">Más antiguos</option>
-            <option value="az">A-Z</option>
-            <option value="za">Z-A</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <button 
-          @click="searchItems"
-          aria-label="Buscar artículos"
-          class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center"
-        >
-          <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          Buscar
-        </button>
-        
-        <button 
-          @click="resetFilters"
-          aria-label="Limpiar todos los filtros"
-          class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center"
-        >
-          <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Limpiar filtros
-        </button>
-      </div>
-    </div>
+    <!-- Componente de filtros avanzados -->
+    <SearchFilters 
+      v-model:filters="searchFilters"
+      @apply="fetchItems"
+      @reset="fetchItems"
+    />
     
     <div class="max-w-4xl mx-auto">
       <div v-if="loading" class="text-center py-8">
@@ -252,192 +137,166 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import axios from 'axios'
+import { ref, computed, onMounted, watch } from 'vue';
+import { searchItems as searchItemsService } from '@/services/itemService';
+import SearchFilters from '@/components/SearchFilters.vue';
 
-const searchQuery = ref('')
-const selectedCategory = ref('')
-const selectedLocation = ref('')
-const selectedCondition = ref('')
-const sortBy = ref('recent')
-const items = ref([])
-const loading = ref(false)
-const error = ref('')
-const currentPage = ref(1)
-const itemsPerPage = ref(12)
-const totalItems = ref(0)
-const maxVisiblePages = 5
+const items = ref([]);
+const loading = ref(false);
+const error = ref('');
+const currentPage = ref(1);
+const itemsPerPage = ref(12);
+const totalItems = ref(0);
+const maxVisiblePages = 5;
 
-const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+// Estado unificado para los filtros de búsqueda
+const searchFilters = ref({
+  query: '',
+  category: '',
+  location: '',
+  condition: '',
+  distance: 10,
+  sort: 'recent',
+  coordinates: null,
+  page: currentPage.value,
+  limit: itemsPerPage.value
+});
+
+const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
 
 const visiblePages = computed(() => {
-  const pages = []
-  const half = Math.floor(maxVisiblePages / 2)
-  let start = currentPage.value - half
-  let end = currentPage.value + half
+  const pages = [];
+  const half = Math.floor(maxVisiblePages / 2);
+  let start = currentPage.value - half;
+  let end = currentPage.value + half;
 
   if (start < 1) {
-    start = 1
-    end = Math.min(maxVisiblePages, totalPages.value)
+    start = 1;
+    end = Math.min(maxVisiblePages, totalPages.value);
   }
 
   if (end > totalPages.value) {
-    end = totalPages.value
-    start = Math.max(1, end - maxVisiblePages + 1)
+    end = totalPages.value;
+    start = Math.max(1, end - maxVisiblePages + 1);
   }
 
   for (let i = start; i <= end; i++) {
-    pages.push(i)
+    pages.push(i);
   }
 
-  return pages
-})
+  return pages;
+});
 
 // Función para validar los parámetros de búsqueda
 const validateSearchParams = () => {
   // Validar longitud mínima de búsqueda
-  if (searchQuery.value && searchQuery.value.length < 2) {
-    error.value = 'La búsqueda debe tener al menos 2 caracteres'
-    return false
+  if (searchFilters.value.query && searchFilters.value.query.length < 2) {
+    error.value = 'La búsqueda debe tener al menos 2 caracteres';
+    return false;
   }
   
   // Validar que no haya caracteres potencialmente peligrosos
-  const dangerousChars = /[<>\\{\}]/g
-  if (searchQuery.value && dangerousChars.test(searchQuery.value)) {
-    error.value = 'La búsqueda contiene caracteres no permitidos'
-    return false
+  const dangerousChars = /[<>\{\}]/g;
+  if (searchFilters.value.query && dangerousChars.test(searchFilters.value.query)) {
+    error.value = 'La búsqueda contiene caracteres no permitidos';
+    return false;
   }
   
   // Validar longitud máxima para prevenir ataques de denegación de servicio
-  if (searchQuery.value && searchQuery.value.length > 100) {
-    error.value = 'La búsqueda es demasiado larga'
-    return false
+  if (searchFilters.value.query && searchFilters.value.query.length > 100) {
+    error.value = 'La búsqueda es demasiado larga';
+    return false;
   }
   
   // Validar ubicación
-  if (selectedLocation.value && dangerousChars.test(selectedLocation.value)) {
-    error.value = 'La ubicación contiene caracteres no permitidos'
-    return false
+  if (searchFilters.value.location && dangerousChars.test(searchFilters.value.location)) {
+    error.value = 'La ubicación contiene caracteres no permitidos';
+    return false;
   }
   
-  if (selectedLocation.value && selectedLocation.value.length > 100) {
-    error.value = 'La ubicación es demasiado larga'
-    return false
+  if (searchFilters.value.location && searchFilters.value.location.length > 100) {
+    error.value = 'La ubicación es demasiado larga';
+    return false;
   }
   
-  return true
-}
-
-// Función para resetear todos los filtros
-const resetFilters = () => {
-  searchQuery.value = ''
-  selectedCategory.value = ''
-  selectedLocation.value = ''
-  selectedCondition.value = ''
-  sortBy.value = 'recent'
-  currentPage.value = 1
-  fetchItems()
-}
+  return true;
+};
 
 const fetchItems = async () => {
   if (!validateSearchParams()) {
-    return
+    return;
   }
   
   try {
-    loading.value = true
-    error.value = ''
+    loading.value = true;
+    error.value = '';
     
-    // Sanitizar parámetros de búsqueda
-    const sanitizedQuery = searchQuery.value.trim()
-    const sanitizedLocation = selectedLocation.value.trim()
+    // Asegurarse de que la página actual esté en los filtros
+    searchFilters.value.page = currentPage.value;
     
     // Establecer un timeout para la petición
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 segundos de timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
     
-    const response = await axios.get('/api/items/search', {
-      params: {
-        q: sanitizedQuery,
-        category: selectedCategory.value,
-        location: sanitizedLocation,
-        condition: selectedCondition.value,
-        sort: sortBy.value,
-        page: currentPage.value,
-        limit: itemsPerPage.value
-      },
-      headers: {
-        'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      signal: controller.signal
-    })
+    // Usar el servicio actualizado para búsqueda avanzada
+    const response = await searchItemsService(searchFilters.value);
     
-    clearTimeout(timeoutId) // Limpiar el timeout si la petición fue exitosa
+    clearTimeout(timeoutId); // Limpiar el timeout si la petición fue exitosa
     
-    items.value = response.data.items || []
-    totalItems.value = response.data.total || 0
+    items.value = response.items || [];
+    totalItems.value = response.total || 0;
     
     // Si no hay resultados pero hay filtros aplicados, mostrar mensaje específico
     if (items.value.length === 0 && (
-      searchQuery.value || 
-      selectedCategory.value || 
-      selectedLocation.value || 
-      selectedCondition.value
+      searchFilters.value.query || 
+      searchFilters.value.category || 
+      searchFilters.value.location || 
+      searchFilters.value.condition
     )) {
-      error.value = 'No se encontraron artículos con los filtros aplicados'
+      error.value = 'No se encontraron artículos con los filtros aplicados';
     }
   } catch (err) {
     if (err.response) {
-      error.value = `Error ${err.response.status}: ${err.response.data.message || 'Error al buscar artículos'}`
+      error.value = `Error ${err.response.status}: ${err.response.data.message || 'Error al buscar artículos'}`;
     } else if (err.request) {
-      error.value = 'No se pudo conectar con el servidor. Verifique su conexión.'
+      error.value = 'No se pudo conectar con el servidor. Verifique su conexión.';
     } else {
-      error.value = 'Error al buscar artículos. Por favor intente nuevamente.'
+      error.value = 'Error al buscar artículos. Por favor intente nuevamente.';
     }
-    console.error('Error al buscar:', err)
-    items.value = []
-    totalItems.value = 0
+    console.error('Error al buscar:', err);
+    items.value = [];
+    totalItems.value = 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-const searchItems = () => {
-  currentPage.value = 1
-  fetchItems()
-}
-
-// Observar cambios en la categoría para actualizar resultados automáticamente
-watch(selectedCategory, () => {
-  currentPage.value = 1
-  fetchItems()
-})
+// Observar cambios en la página actual para actualizar los resultados
+watch(currentPage, (newPage) => {
+  searchFilters.value.page = newPage;
+  fetchItems();
+});
 
 // Cargar datos iniciales al montar el componente
 onMounted(() => {
-  fetchItems()
-})
+  fetchItems();
+});
 
 const prevPage = () => {
   if (currentPage.value > 1) {
-    currentPage.value--
-    fetchItems()
+    currentPage.value--;
   }
-}
+};
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    fetchItems()
+    currentPage.value++;
   }
-}
+};
 
 const goToPage = (page) => {
-  currentPage.value = page
-  fetchItems()
-}
+  currentPage.value = page;
+};
 </script>
 
 <style scoped>

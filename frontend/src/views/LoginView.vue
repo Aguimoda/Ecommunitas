@@ -178,7 +178,7 @@ const handleSubmit = async () => {
     isLoading.value = true
     error.value = ''
     
-    const response = await axios.post('/api/auth/login', {
+    const response = await axios.post('/api/v1/auth/login', {
       email: email.value,
       password: password.value
     })

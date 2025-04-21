@@ -1,7 +1,37 @@
-import express from 'express'
-import rateLimit from 'express-rate-limit'
-import { createLogger, transports, format } from 'winston'
-import { v4 as uuidv4 } from 'uuid'
+const express = require('express');
+const dotenv = require('dotenv');
+const morgan = require('morgan');
+const colors = require('colors');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const { createLogger, transports, format } = require('winston');
+const { v4: uuidv4 } = require('uuid');
+const connectDB = require('./config/db');
+const errorHandler = require('./middleware/error');
+const fileUploadMiddleware = require('./middleware/fileUpload');
+
+// Cargar variables de entorno
+dotenv.config();
+
+// Conectar a la base de datos
+connectDB();
+
+// Inicializar la aplicación Express
+const app = express();
+
+// Middleware para body parser
+app.use(express.json());
+
+// Middleware para CORS
+app.use(cors());
+
+// Middleware para logging en desarrollo
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Middleware para carga de archivos
+fileUploadMiddleware(app);
 
 // Configure CSP report logger
 const cspLogger = createLogger({
@@ -13,7 +43,7 @@ const cspLogger = createLogger({
   transports: [
     new transports.File({ filename: 'csp-reports.log' })
   ]
-})
+});
 
 // Rate limiter for CSP reports (10 requests/minute per IP)
 const cspRateLimiter = rateLimit({
@@ -21,7 +51,7 @@ const cspRateLimiter = rateLimit({
   max: 10,
   message: 'Too many CSP reports from this IP, please try again later',
   skipSuccessfulRequests: true
-})
+});
 
 /**
  * CSP Report Endpoint
@@ -34,12 +64,12 @@ const cspRateLimiter = rateLimit({
 app.post('/csp-report', cspRateLimiter, (req, res) => {
   // Validate Content-Type
   if (!req.is('application/csp-report')) {
-    return res.status(415).send('Unsupported Media Type')
+    return res.status(415).send('Unsupported Media Type');
   }
 
   try {
-    const reportId = uuidv4()
-    const { 'csp-report': report } = req.body
+    const reportId = uuidv4();
+    const { 'csp-report': report } = req.body;
 
     // Log violation with essential details
     cspLogger.info({
@@ -51,15 +81,47 @@ app.post('/csp-report', cspRateLimiter, (req, res) => {
       blockedUri: report['blocked-uri'],
       userAgent: req.headers['user-agent'],
       sourceIp: req.ip
-    })
+    });
 
-    return res.status(204).send()
+    return res.status(204).send();
   } catch (error) {
     cspLogger.error({
       message: 'Error processing CSP report',
       error: error.message,
       stack: error.stack
-    })
-    return res.status(400).send('Bad Request')
+    });
+    return res.status(400).send('Bad Request');
   }
-})
+});
+
+// Importar rutas
+const auth = require('./routes/auth');
+const users = require('./routes/users');
+const items = require('./routes/items');
+const messages = require('./routes/messages');
+
+// Montar rutas
+app.use('/api/v1/auth', auth);
+app.use('/api/v1/users', users);
+app.use('/api/v1/items', items);
+app.use('/api/v1/messages', messages);
+
+// Middleware para manejo de errores
+app.use(errorHandler);
+
+// Configurar el puerto del servidor
+const PORT = process.env.PORT || 3000;
+
+// Iniciar el servidor
+const server = app.listen(PORT, () => {
+  console.log(`Servidor ejecutándose en modo ${process.env.NODE_ENV} en el puerto ${PORT}`.yellow.bold);
+});
+
+// Manejar rechazos de promesas no capturados
+process.on('unhandledRejection', (err, promise) => {
+  console.log(`Error: ${err.message}`.red);
+  // Cerrar el servidor y salir del proceso
+  server.close(() => process.exit(1));
+});
+
+module.exports = app;

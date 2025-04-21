@@ -111,10 +111,12 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import jwt_decode from 'jwt-decode'
+import { useToast } from 'vue-toastification'
 
 // Estado
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 const messages = ref([])
 const otherUser = ref({})
 const item = ref(null)
@@ -146,13 +148,21 @@ const getUserIdFromToken = () => {
 const fetchMessages = async () => {
   try {
     loading.value = true
+    error.value = ''
+    
+    // Obtener ID del usuario actual
+    userId.value = getUserIdFromToken()
+    
+    toast.info('Cargando conversación...', {
+      timeout: 2000
+    })
+    
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login')
       return
     }
 
-    userId.value = getUserIdFromToken()
     if (!userId.value) return
 
     const response = await axios.get(`/api/messages/${route.params.id}`, {
@@ -180,19 +190,24 @@ const fetchMessages = async () => {
     await nextTick()
     scrollToBottom()
   } catch (err) {
-    console.error('Error al cargar mensajes:', err)
-    error.value = 'No se pudieron cargar los mensajes. Por favor, intenta nuevamente.'
+    console.error('Error al cargar la conversación:', err)
+    error.value = 'No se pudo cargar la conversación. Por favor, intenta nuevamente.'
+    toast.error('Error al cargar la conversación')
   } finally {
     loading.value = false
   }
 }
 
-// Enviar mensaje
+// Enviar un nuevo mensaje
 const sendMessage = async () => {
   if (!newMessage.value.trim() || sending.value) return
+  
+  sending.value = true
+  toast.info('Enviando mensaje...', {
+    timeout: 1000
+  })
 
   try {
-    sending.value = true
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login')
@@ -222,17 +237,16 @@ const sendMessage = async () => {
       createdAt: new Date().toISOString()
     })
 
-    // Limpiar campo de mensaje
+    // Limpiar el campo de mensaje y desplazarse hacia abajo
     newMessage.value = ''
-
-    // Desplazar al final de los mensajes
+    sending.value = false
+    toast.success('Mensaje enviado correctamente')
     await nextTick()
     scrollToBottom()
   } catch (err) {
     console.error('Error al enviar mensaje:', err)
-    alert('No se pudo enviar el mensaje. Por favor, intenta nuevamente.')
-  } finally {
     sending.value = false
+    toast.error('Error al enviar el mensaje. Inténtalo de nuevo.')
   }
 }
 

@@ -118,7 +118,7 @@ type ItemForm = {
 
 const route = useRoute()
 const router = useRouter()
-const toast = useToast()
+const toast = useToast() as any
 
 const form = ref<ItemForm>({
   title: '',

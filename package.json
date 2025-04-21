@@ -26,5 +26,8 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "winston": "^3.17.0"
   }
 }

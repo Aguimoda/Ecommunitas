@@ -37,8 +37,23 @@
                 <p class="text-sm font-medium text-gray-900">{{ conversation.otherUser.name }}</p>
                 <p class="text-xs text-gray-500">{{ formatDate(conversation.lastMessage.createdAt) }}</p>
               </div>
-              <div class="mt-1">
-                <p class="text-sm text-gray-600 truncate">{{ conversation.lastMessage.content }}</p>
+              <div class="mt-1 flex items-center">
+                <p class="text-sm text-gray-600 truncate" :class="{'font-semibold': conversation.unreadCount > 0}">{{ conversation.lastMessage.content }}</p>
+                <span v-if="conversation.lastMessage.status === 'sent'" class="ml-1 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span v-else-if="conversation.lastMessage.status === 'delivered'" class="ml-1 text-blue-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span v-else-if="conversation.lastMessage.status === 'read'" class="ml-1 text-green-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
               </div>
             </div>
             <div v-if="conversation.unreadCount > 0" class="ml-2 flex-shrink-0">
@@ -54,27 +69,76 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
+import { useToast } from 'vue-toastification'
+import messageService from '../services/messageService'
 
 const conversations = ref([])
 const loading = ref(true)
 const error = ref(null)
+const toast = useToast()
+const pollingInterval = ref(null)
+const previousCount = ref(0)
 
-onMounted(async () => {
+const loadConversations = async () => {
   try {
-    loading.value = true
-    const response = await axios.get('/api/messages/conversations', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    })
-    conversations.value = response.data
+    if (loading.value) {
+      toast.info('Cargando conversaciones...', {
+        timeout: 2000
+      })
+    }
+    
+    const response = await messageService.getConversations()
+    const newConversations = response.data
+    
+    // Verificar si hay nuevos mensajes no leídos
+    const totalUnread = newConversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0)
+    const previousUnread = previousCount.value
+    
+    if (totalUnread > previousUnread && previousUnread > 0) {
+      const newMessages = totalUnread - previousUnread
+      const message = newMessages === 1 
+        ? 'Has recibido un nuevo mensaje' 
+        : `Has recibido ${newMessages} nuevos mensajes`
+      
+      toast.info(message, {
+        timeout: 5000,
+        onClick: () => {
+          // Si hay un nuevo mensaje, reproducir sonido de notificación
+          const audio = new Audio('/sounds/notification.mp3')
+          audio.play()
+        }
+      })
+    }
+    
+    previousCount.value = totalUnread
+    conversations.value = newConversations
+    
+    if (conversations.value.length > 0 && loading.value) {
+      toast.success(`${conversations.value.length} conversaciones cargadas`)
+    }
   } catch (err) {
     console.error('Error al cargar mensajes:', err)
     error.value = 'No se pudieron cargar los mensajes. Por favor, intenta nuevamente.'
+    toast.error('Error al cargar las conversaciones')
   } finally {
     loading.value = false
+  }
+}
+
+onMounted(async () => {
+  loading.value = true
+  await loadConversations()
+  
+  // Configurar polling para actualizar mensajes cada 30 segundos
+  pollingInterval.value = setInterval(loadConversations, 30000)
+})
+
+onBeforeUnmount(() => {
+  // Limpiar el intervalo cuando el componente se desmonta
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value)
   }
 })
 
