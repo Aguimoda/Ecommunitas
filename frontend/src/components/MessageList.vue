@@ -2,39 +2,39 @@
   <div class="message-list">
     <h2 class="text-xl font-semibold mb-4">Mensajes</h2>
     
-    <div v-if="loading" class="flex justify-center py-8">
+    <div v-if="props.loading" class="flex justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
     </div>
     
-    <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-      <p class="text-sm text-red-700">{{ error }}</p>
+    <div v-else-if="props.error" class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+      <p class="text-sm text-red-700">{{ props.error }}</p>
     </div>
     
-    <div v-else-if="conversations.length === 0" class="text-center py-8 text-gray-500">
+    <div v-else-if="!props.loading && !props.error && props.conversations.length === 0" class="text-center py-8 text-gray-500">
       <svg class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
       </svg>
       <p>No tienes mensajes todavía</p>
     </div>
     
-    <ul v-else class="divide-y divide-gray-200">
-      <li v-for="conversation in conversations" :key="conversation._id" class="py-4">
+    <ul v-else-if="props.conversations.length > 0" class="divide-y divide-gray-200">
+      <li v-for="conversation in props.conversations" :key="conversation.withUser._id" class="py-4">
         <router-link 
-          :to="`/messages/${conversation.otherUser._id}`" 
+          :to="`/messages/${conversation.withUser._id}`" 
           class="block hover:bg-gray-50 p-3 rounded-lg transition-colors"
         >
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div v-if="conversation.otherUser.profileImage" class="h-10 w-10 rounded-full overflow-hidden">
-                <img :src="conversation.otherUser.profileImage" :alt="conversation.otherUser.name" class="h-full w-full object-cover">
+              <div v-if="conversation.withUser.profileImage" class="h-10 w-10 rounded-full overflow-hidden">
+                <img :src="conversation.withUser.profileImage" :alt="conversation.withUser.name" class="h-full w-full object-cover">
               </div>
               <div v-else class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500">
-                {{ getInitials(conversation.otherUser.name) }}
+                {{ getInitials(conversation.withUser.name) }}
               </div>
             </div>
             <div class="ml-4 flex-1">
               <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-gray-900">{{ conversation.otherUser.name }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ conversation.withUser.name }}</p>
                 <p class="text-xs text-gray-500">{{ formatDate(conversation.lastMessage.createdAt) }}</p>
               </div>
               <div class="mt-1 flex items-center">
@@ -69,78 +69,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import axios from 'axios'
-import { useToast } from 'vue-toastification'
-import messageService from '../services/messageService'
+import { defineProps } from 'vue';
 
-const conversations = ref([])
-const loading = ref(true)
-const error = ref(null)
-const toast = useToast()
-const pollingInterval = ref(null)
-const previousCount = ref(0)
-
-const loadConversations = async () => {
-  try {
-    if (loading.value) {
-      toast.info('Cargando conversaciones...', {
-        timeout: 2000
-      })
-    }
-    
-    const response = await messageService.getConversations()
-    const newConversations = response.data
-    
-    // Verificar si hay nuevos mensajes no leídos
-    const totalUnread = newConversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0)
-    const previousUnread = previousCount.value
-    
-    if (totalUnread > previousUnread && previousUnread > 0) {
-      const newMessages = totalUnread - previousUnread
-      const message = newMessages === 1 
-        ? 'Has recibido un nuevo mensaje' 
-        : `Has recibido ${newMessages} nuevos mensajes`
-      
-      toast.info(message, {
-        timeout: 5000,
-        onClick: () => {
-          // Si hay un nuevo mensaje, reproducir sonido de notificación
-          const audio = new Audio('/sounds/notification.mp3')
-          audio.play()
-        }
-      })
-    }
-    
-    previousCount.value = totalUnread
-    conversations.value = newConversations
-    
-    if (conversations.value.length > 0 && loading.value) {
-      toast.success(`${conversations.value.length} conversaciones cargadas`)
-    }
-  } catch (err) {
-    console.error('Error al cargar mensajes:', err)
-    error.value = 'No se pudieron cargar los mensajes. Por favor, intenta nuevamente.'
-    toast.error('Error al cargar las conversaciones')
-  } finally {
-    loading.value = false
+const props = defineProps({
+  conversations: {
+    type: Array,
+    required: true,
+    default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  error: {
+    type: String,
+    default: ''
   }
-}
+});
 
-onMounted(async () => {
-  loading.value = true
-  await loadConversations()
-  
-  // Configurar polling para actualizar mensajes cada 30 segundos
-  pollingInterval.value = setInterval(loadConversations, 30000)
-})
-
-onBeforeUnmount(() => {
-  // Limpiar el intervalo cuando el componente se desmonta
-  if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
-  }
-})
+// Las funciones getInitials y formatDate se mantienen ya que son helpers de UI
+// y no dependen del estado interno de carga o error de este componente.
 
 const getInitials = (name) => {
   return name

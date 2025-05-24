@@ -16,6 +16,11 @@ const MessageSchema = new mongoose.Schema({
     required: [true, 'El mensaje no puede estar vacío'],
     maxlength: [1000, 'El mensaje no puede tener más de 1000 caracteres']
   },
+  item: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Item',
+    required: false // Un mensaje no siempre está asociado a un item
+  },
   read: {
     type: Boolean,
     default: false
@@ -25,6 +30,7 @@ const MessageSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
+  timestamps: true, // Añade createdAt y updatedAt automáticamente, aunque ya tienes createdAt manual.
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });

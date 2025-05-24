@@ -3,10 +3,9 @@
     <h1 class="text-3xl font-bold text-center mb-8">Buscar Artículos</h1>
     
     <!-- Componente de filtros avanzados -->
-    <SearchFilters 
-      v-model:filters="searchFilters"
-      @apply="fetchItems"
-      @reset="fetchItems"
+    <SearchFilters    v-model:filters="searchFilters"
+      @apply="handleApplyFilters"
+      @reset="handleResetFilters"
     />
     
     <div class="max-w-4xl mx-auto">
@@ -28,20 +27,21 @@
         </div>
       </div>
       
-      <div v-if="items.length === 0 && !loading" class="text-center py-8">
-        <p class="text-gray-500">No se encontraron artículos</p>
+      <div v-if="!error && items.length === 0 && !loading" class="text-center py-8">
+        <p v-if="hasActiveFilters" class="text-gray-500">No se encontraron artículos con los filtros aplicados.</p>
+        <p v-else class="text-gray-500">No se encontraron artículos.</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div 
           v-for="item in items" 
-          :key="item.id" 
+          :key="item._id" 
           class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
         >
           <div class="relative">
             <img 
-              v-if="item.imageUrl" 
-              :src="item.imageUrl" 
+              v-if="item.imageUrl || (item.imageUrls && item.imageUrls.length > 0)" 
+              :src="item.imageUrl ? item.imageUrl : item.imageUrls[0]" 
               :alt="item.title" 
               loading="lazy"
               class="w-full h-48 object-cover"
@@ -52,7 +52,7 @@
               </svg>
             </div>
             <div class="absolute top-2 right-2 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-              {{ item.condition }}
+              {{ translateCategory(item.category) }}
             </div>
           </div>
           
@@ -64,7 +64,7 @@
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                {{ item.category }}
+                {{ translateCondition(item.condition) }}
               </p>
               <p class="flex items-center">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +84,7 @@
             <div class="mt-4 flex justify-end">
               <button 
                 class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 text-sm font-medium"
-                @click="$router.push(`/items/${item.id}`)"
+                @click="goToItemDetail(item._id, item.title)"
                 :aria-label="`Ver detalles de ${item.title}`"
               >
                 Ver detalles
@@ -137,9 +137,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { searchItems as searchItemsService } from '@/services/itemService';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
+import { searchItems as searchItemsService } from '@/services/itemService.js';
 import SearchFilters from '@/components/SearchFilters.vue';
+
+const router = useRouter();
 
 const items = ref([]);
 const loading = ref(false);
@@ -149,17 +152,22 @@ const itemsPerPage = ref(12);
 const totalItems = ref(0);
 const maxVisiblePages = 5;
 
-// Estado unificado para los filtros de búsqueda
+const hasActiveFilters = computed(() => {
+  return !!(searchFilters.value.query || 
+         searchFilters.value.category || 
+         searchFilters.value.location || 
+         searchFilters.value.condition);
+});
+
+// Estado para los filtros de búsqueda (sin page y limit)
 const searchFilters = ref({
   query: '',
   category: '',
   location: '',
   condition: '',
-  distance: 10,
-  sort: 'recent',
+  distance: 10, // Valor por defecto, asegúrate que coincida con SearchFilters.vue si es necesario
+  sort: 'recent', // Valor por defecto
   coordinates: null,
-  page: currentPage.value,
-  limit: itemsPerPage.value
 });
 
 const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
@@ -187,99 +195,168 @@ const visiblePages = computed(() => {
   return pages;
 });
 
+// Función para traducir categorías
+const translateCategory = (category) => {
+  const categories = {
+    books: 'Libros',
+    electronics: 'Electrónica',
+    clothing: 'Ropa',
+    furniture: 'Muebles',
+    other: 'Otros'
+  };
+  return categories[category] || category;
+};
+
+// Función para traducir condiciones
+const translateCondition = (condition) => {
+  const conditions = {
+    new: 'Nuevo',
+    like_new: 'Como nuevo',
+    good: 'Buen estado',
+    fair: 'Estado aceptable',
+    poor: 'Estado regular'
+  };
+  return conditions[condition] || condition;
+};
+
 // Función para validar los parámetros de búsqueda
 const validateSearchParams = () => {
-  // Validar longitud mínima de búsqueda
-  if (searchFilters.value.query && searchFilters.value.query.length < 2) {
-    error.value = 'La búsqueda debe tener al menos 2 caracteres';
-    return false;
+  // Permitir búsquedas con 1 carácter o más
+  if (searchFilters.value.query !== undefined && searchFilters.value.query.trim().length === 0) {
+    searchFilters.value.query = ''; // Limpiar espacios en blanco
+    return null; // No es un error, solo limpiamos
   }
   
-  // Validar que no haya caracteres potencialmente peligrosos
-  const dangerousChars = /[<>\{\}]/g;
+  const dangerousChars = /[<>{}]/g;
   if (searchFilters.value.query && dangerousChars.test(searchFilters.value.query)) {
-    error.value = 'La búsqueda contiene caracteres no permitidos';
-    return false;
+    return 'La búsqueda contiene caracteres no permitidos';
   }
   
-  // Validar longitud máxima para prevenir ataques de denegación de servicio
   if (searchFilters.value.query && searchFilters.value.query.length > 100) {
-    error.value = 'La búsqueda es demasiado larga';
-    return false;
+    return 'La búsqueda es demasiado larga';
   }
   
-  // Validar ubicación
   if (searchFilters.value.location && dangerousChars.test(searchFilters.value.location)) {
-    error.value = 'La ubicación contiene caracteres no permitidos';
-    return false;
+    return 'La ubicación contiene caracteres no permitidos';
   }
   
   if (searchFilters.value.location && searchFilters.value.location.length > 100) {
-    error.value = 'La ubicación es demasiado larga';
-    return false;
+    return 'La ubicación es demasiado larga';
   }
   
-  return true;
+  return null; // Devuelve null si no hay errores de validación
 };
 
 const fetchItems = async () => {
-  if (!validateSearchParams()) {
+  if (loading.value) {
+    return; // Evitar llamadas concurrentes si ya se está cargando
+  }
+
+  loading.value = true;
+  error.value = ''; // Limpiar errores previos al inicio de la carga
+  items.value = []; // Limpiar items previos para evitar mostrar datos antiguos durante la carga o error
+  totalItems.value = 0;
+
+  const validationError = validateSearchParams();
+  if (validationError) {
+    error.value = validationError;
+    loading.value = false; // Detener la carga si hay error de validación
     return;
   }
   
   try {
-    loading.value = true;
-    error.value = '';
+    // Crear una copia profunda de searchFilters para evitar mutaciones por el servicio
+    const filtersCopy = JSON.parse(JSON.stringify(searchFilters.value));
+    const paramsForService = {
+      ...filtersCopy,
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    };
     
-    // Asegurarse de que la página actual esté en los filtros
-    searchFilters.value.page = currentPage.value;
+    console.log('SearchView - Enviando filtros al servicio:', paramsForService);
     
-    // Establecer un timeout para la petición
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
     
-    // Usar el servicio actualizado para búsqueda avanzada
-    const response = await searchItemsService(searchFilters.value);
+    const response = await searchItemsService(paramsForService, { signal: controller.signal });
+    clearTimeout(timeoutId);
     
-    clearTimeout(timeoutId); // Limpiar el timeout si la petición fue exitosa
+    console.log('SearchView - Respuesta del servicio:', response);
     
-    items.value = response.items || [];
-    totalItems.value = response.total || 0;
-    
-    // Si no hay resultados pero hay filtros aplicados, mostrar mensaje específico
-    if (items.value.length === 0 && (
-      searchFilters.value.query || 
-      searchFilters.value.category || 
-      searchFilters.value.location || 
-      searchFilters.value.condition
-    )) {
-      error.value = 'No se encontraron artículos con los filtros aplicados';
+    if (response && response.data) {
+      items.value = response.data || [];
+      totalItems.value = response.total || 0;
+      console.log('SearchView - Items cargados:', items.value.length, 'de', totalItems.value);
+    } else {
+      console.error('SearchView - Respuesta inesperada del servicio:', response);
+      error.value = 'Formato de respuesta inesperado del servidor';
     }
   } catch (err) {
-    if (err.response) {
-      error.value = `Error ${err.response.status}: ${err.response.data.message || 'Error al buscar artículos'}`;
+    console.error('SearchView - Error al buscar:', err); 
+
+    if (err.name === 'AbortError') {
+      error.value = 'La búsqueda tardó demasiado y fue cancelada. Intente nuevamente.';
+    } else if (err.response) {
+      error.value = `Error ${err.response.status}: ${err.response.data?.message || 'Error al buscar artículos'}`;
     } else if (err.request) {
       error.value = 'No se pudo conectar con el servidor. Verifique su conexión.';
     } else {
       error.value = 'Error al buscar artículos. Por favor intente nuevamente.';
     }
-    console.error('Error al buscar:', err);
-    items.value = [];
-    totalItems.value = 0;
+    // items.value y totalItems.value ya fueron reseteados al inicio
   } finally {
     loading.value = false;
   }
 };
 
 // Observar cambios en la página actual para actualizar los resultados
-watch(currentPage, (newPage) => {
-  searchFilters.value.page = newPage;
-  fetchItems();
+watch(currentPage, () => {
+  fetchItems(); // Llamada simplificada
 });
+
+// Nuevos manejadores para los eventos de SearchFilters
+const handleApplyFilters = (filters) => {
+  console.log('SearchView - Filtros recibidos del componente SearchFilters:', filters);
+  // Actualizar el estado local con los filtros recibidos
+  searchFilters.value = { ...filters };
+  
+  if (currentPage.value !== 1) {
+    currentPage.value = 1; // El watcher de currentPage se encargará de llamar a fetchItems
+  } else {
+    // Si currentPage ya es 1, el watcher no se activará.
+    // Usar nextTick para asegurar que cualquier cambio de estado pendiente se procese
+    // antes de llamar a fetchItems.
+    nextTick(() => {
+      fetchItems();
+    });
+  }
+};
+
+const handleResetFilters = () => {
+  // Resetear los valores de searchFilters a sus defaults
+  searchFilters.value.query = '';
+  searchFilters.value.category = '';
+  searchFilters.value.location = '';
+  searchFilters.value.condition = '';
+  searchFilters.value.distance = 10; // Asegúrate que este es el valor por defecto correcto
+  searchFilters.value.sort = 'recent'; // Asegúrate que este es el valor por defecto correcto
+  searchFilters.value.coordinates = null;
+  
+  if (currentPage.value !== 1) {
+    currentPage.value = 1; // El watcher se encargará
+  } else {
+    // Si currentPage ya es 1, el watcher no se activará.
+    // Usar nextTick para asegurar que cualquier cambio de estado pendiente se procese
+    // antes de llamar a fetchItems.
+    nextTick(() => {
+      fetchItems(); // Llamar directamente si ya está en la página 1
+    });
+  }
+};
 
 // Cargar datos iniciales al montar el componente
 onMounted(() => {
-  fetchItems();
+  fetchItems(); // Llamada simplificada
 });
 
 const prevPage = () => {
@@ -297,6 +374,15 @@ const nextPage = () => {
 const goToPage = (page) => {
   currentPage.value = page;
 };
+
+const goToItemDetail = (id, title) => {
+  // Validar que el ID sea válido y no sea "search" ni vacío ni null
+  if (!id || typeof id !== 'string' || id === 'search' || id.trim() === '' || id.length < 8) {
+    error.value = 'ID de artículo inválido.';
+    return;
+  }
+  router.push(`/items/${id}`);
+};
 </script>
 
 <style scoped>
@@ -312,18 +398,16 @@ const goToPage = (page) => {
 
 .item {
   border: 1px solid #ddd;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilos para limitar texto a un número específico de líneas */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;

@@ -66,6 +66,15 @@ class MessageService {
     const response = await axios.delete(`${API_URL}/messages/${messageId}`, { headers: authHeader() });
     return response.data;
   }
+
+  /**
+   * Obtiene todas las conversaciones del usuario actual
+   * @returns {Promise} Promesa con las conversaciones
+   */
+  async getConversations() {
+    const response = await axios.get(`${API_URL}/messages/conversations`, { headers: authHeader() });
+    return response.data;
+  }
 }
 
 export default new MessageService();

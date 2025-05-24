@@ -15,20 +15,21 @@ const ItemSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Please select a category'],
-    enum: ['books', 'electronics', 'clothing', 'furniture', 'other']
+    enum: ['books', 'electronics', 'clothing', 'furniture', 'other', 'ropa', 'electronica', 'hogar', 'libros']
   },
   condition: {
     type: String,
     required: [true, 'Please select condition'],
-    enum: ['new', 'like_new', 'good', 'fair', 'poor']
+    enum: ['new', 'like_new', 'good', 'fair', 'poor', 'nuevo', 'bueno', 'usado']
   },
   location: {
     type: String,
     required: [true, 'Please add location']
   },
-  imageUrl: {
-    type: String,
-    required: [true, 'Please add an image']
+  imageUrls: {
+    type: [String],
+    // required: [true, 'Please add at least one image'] // Made optional
+    default: [] // Provide a default empty array
   },
   available: {
     type: Boolean,

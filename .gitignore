@@ -69,3 +69,5 @@ ehthumbs.db
 **/cypress/videos/
 **/cypress/screenshots/
 **/test-results/
+# SpecStory explanation file
+.specstory/.what-is-this.md

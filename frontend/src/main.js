@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './assets/main.css'
@@ -9,6 +10,7 @@ import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
 
 const app = createApp(App)
+const pinia = createPinia()
 
 // Toast configuration
 const toastOptions = {
@@ -20,6 +22,7 @@ const toastOptions = {
   draggable: true
 }
 
+app.use(pinia)
 app.use(router)
 app.use(Toast, toastOptions)
 app.mount('#app')

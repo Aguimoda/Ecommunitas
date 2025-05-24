@@ -1,6 +1,9 @@
 <template>
   <div class="item-post">
     <h1>Publicar Artículo</h1>
+    <div v-if="error" class="error-message">
+      {{ error }}
+    </div>
     <form @submit.prevent="handleSubmit">
       <div>
         <label for="title">Título:</label>
@@ -37,7 +40,7 @@
         <label for="images">Imágenes:</label>
         <input type="file" id="images" multiple @change="handleImageUpload">
       </div>
-      <button type="submit">Publicar</button>
+      <button type="submit" :disabled="isLoading">{{ isLoading ? 'Publicando...' : 'Publicar' }}</button>
     </form>
   </div>
 </template>
@@ -64,6 +67,15 @@ const handleImageUpload = (event) => {
 const handleSubmit = async () => {
   try {
     isLoading.value = true
+    
+    // Verificar si el usuario está autenticado
+    const token = localStorage.getItem('token')
+    if (!token) {
+      error.value = 'Debes iniciar sesión para publicar un artículo'
+      isLoading.value = false
+      return
+    }
+    
     const formData = new FormData()
     formData.append('title', title.value)
     formData.append('description', description.value)
@@ -71,20 +83,23 @@ const handleSubmit = async () => {
     formData.append('condition', condition.value)
     formData.append('location', location.value)
     
-    images.value.forEach((image, index) => {
-      formData.append(`images`, image)
+    images.value.forEach((image) => {
+      formData.append('images', image)
     })
     
-    const response = await axios.post('/api/items', formData, {
+    // Incluir el token de autenticación en la solicitud
+    const response = await axios.post('/api/v1/items', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Authorization': `Bearer ${token}`
+        // No es necesario establecer 'Content-Type' para FormData, Axios lo hace automáticamente
       }
     })
     
+    console.log('Artículo publicado exitosamente:', response.data)
     router.push('/')
   } catch (err) {
-    error.value = 'Error al publicar el artículo. Por favor intente nuevamente.'
     console.error('Error al publicar artículo:', err)
+    error.value = err.response?.data?.error || 'Error al publicar el artículo. Por favor intente nuevamente.'
   } finally {
     isLoading.value = false
   }
@@ -133,5 +148,19 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
   background-color: #45a049;
+}
+
+button[type="submit"]:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
 }
 </style>

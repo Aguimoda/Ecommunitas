@@ -1,0 +1,40 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de entorno
+.env
+.env.*
+!.env.example
+
+# Directorios de dependencias
+**/node_modules/
+**/jspm_packages/
+
+# Artefactos de construcción
+**/dist/
+**/build/
+**/out/
+**/.cache/
+**/.temp/
+
+# Reportes de cobertura
+**/coverage/
+**/*.lcov
+
+# Logs
+**/logs/
+**/*.log
+
+# Archivos del IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

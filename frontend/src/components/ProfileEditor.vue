@@ -16,7 +16,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Foto de perfil</label>
             <div class="flex items-center space-x-4">
               <img 
-                :src="previewImage || profile.avatarUrl || '/default-avatar.png'" 
+                :src="previewImage || (fetchedProfile && fetchedProfile.avatarUrl) || '/default-avatar.png'" 
                 alt="Preview"
                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
               />
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import axios from 'axios'
 
@@ -106,10 +106,6 @@ type Profile = {
   avatarUrl: string | null
 }
 
-const props = defineProps<{
-  profile: Profile
-}>()
-
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'save', profile: Profile): void
@@ -120,22 +116,52 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const isLoading = ref(false)
 const previewImage = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
+const fetchedProfile = ref<Profile | null>(null)
 
-const form = ref<Omit<Profile, 'id'>>({
-  name: props.profile.name,
-  bio: props.profile.bio,
-  location: props.profile.location,
-  avatarUrl: props.profile.avatarUrl
+const form = ref({
+  name: '',
+  bio: '',
+  location: '',
 })
 
-watch(() => props.profile, (newProfile) => {
-  form.value = {
-    name: newProfile.name,
-    bio: newProfile.bio,
-    location: newProfile.location,
-    avatarUrl: newProfile.avatarUrl
+function mapUserToProfile(user: any): Profile {
+  return {
+    id: user._id, // Assuming backend uses _id
+    name: user.name || '',
+    bio: user.bio || '',
+    location: user.location || '',
+    avatarUrl: user.avatar || null // Assuming backend field is 'avatar'
+  };
+}
+
+onMounted(async () => {
+  try {
+    isLoading.value = true;
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await axios.get('/api/v1/users/profile', { headers });
+
+    if (response.data && response.data.success) {
+      const user = response.data.data;
+      fetchedProfile.value = mapUserToProfile(user);
+      
+      form.value = {
+        name: fetchedProfile.value.name,
+        bio: fetchedProfile.value.bio,
+        location: fetchedProfile.value.location,
+      };
+      previewImage.value = fetchedProfile.value.avatarUrl;
+    } else {
+      toast.error(response.data.error || 'Error al cargar el perfil');
+    }
+  } catch (error: any) {
+    console.error("Error fetching profile:", error);
+    const errorMessage = error.response?.data?.error || 'Error al cargar el perfil. Inténtalo de nuevo.';
+    toast.error(errorMessage);
+  } finally {
+    isLoading.value = false;
   }
-}, { deep: true })
+});
 
 const handleImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -151,6 +177,10 @@ const handleImageChange = (event: Event) => {
 }
 
 const submitForm = async () => {
+  if (!fetchedProfile.value || !fetchedProfile.value.id) {
+    toast.error('No se pudo identificar el perfil del usuario.');
+    return;
+  }
   try {
     isLoading.value = true
     
@@ -160,19 +190,30 @@ const submitForm = async () => {
     formData.append('location', form.value.location)
     
     if (selectedFile.value) {
-      formData.append('avatar', selectedFile.value)
+      formData.append('avatar', selectedFile.value) // Key 'avatar' should match backend (e.g., multer fieldname)
     }
     
-    const response = await axios.put(`/api/users/${props.profile.id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'multipart/form-data'
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await axios.put(`/api/v1/users/${fetchedProfile.value.id}`, formData, { headers });
     
-    emit('save', response.data)
-    toast.success('Perfil actualizado correctamente')
-  } catch (error) {
-    toast.error('Error al actualizar el perfil')
+    if (response.data && response.data.success) {
+      emit('save', mapUserToProfile(response.data.data))
+      toast.success('Perfil actualizado correctamente')
+      emit('close'); // Close modal on success
+    } else {
+      toast.error(response.data.error || 'Error al actualizar el perfil');
+    }
+  } catch (error: any) {
+    console.error("Error updating profile:", error);
+    const errorMessage = error.response?.data?.error || 'Error al actualizar el perfil. Inténtalo de nuevo.';
+    toast.error(errorMessage);
   } finally {
     isLoading.value = false
   }

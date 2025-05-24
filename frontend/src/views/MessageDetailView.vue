@@ -36,15 +36,21 @@
         <div class="p-4 bg-gray-50 border-b border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div v-if="otherUser.profileImage" class="h-10 w-10 rounded-full overflow-hidden">
-                <img :src="otherUser.profileImage" :alt="otherUser.name" class="h-full w-full object-cover">
+              <div v-if="otherUser && otherUser.profileImage" class="h-10 w-10 rounded-full overflow-hidden">
+                <img :src="otherUser.profileImage" :alt="otherUser.name || 'Avatar'" class="h-full w-full object-cover">
               </div>
-              <div v-else class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+              <div v-else-if="otherUser && otherUser.name" class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                 <span class="text-sm font-medium text-indigo-500">{{ getInitials(otherUser.name) }}</span>
+              </div>
+              <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
               </div>
             </div>
             <div class="ml-3">
-              <h2 class="text-lg font-medium text-gray-900">{{ otherUser.name }}</h2>
+              <h2 v-if="otherUser && otherUser.name" class="text-lg font-medium text-gray-900">{{ otherUser.name }}</h2>
+              <h2 v-else class="text-lg font-medium text-gray-900">Usuario desconocido</h2>
               <p v-if="item" class="text-sm text-gray-500">
                 Conversación sobre: <router-link :to="`/items/${item._id}`" class="text-indigo-600 hover:text-indigo-500">{{ item.title }}</router-link>
               </p>
@@ -87,7 +93,7 @@
             </div>
             <button 
               type="submit"
-              :disabled="sending || !newMessage.trim()"
+              :disabled="sending || !newMessage.trim() || !otherUser || !otherUser._id"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg v-if="sending" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -110,7 +116,8 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-import jwt_decode from 'jwt-decode'
+import messageService from '@/services/messageService'
+import { jwtDecode } from 'jwt-decode'
 import { useToast } from 'vue-toastification'
 
 // Estado
@@ -135,7 +142,7 @@ const getUserIdFromToken = () => {
     return null
   }
   try {
-    const decoded = jwt_decode(token)
+    const decoded = jwtDecode(token)
     return decoded.id
   } catch (err) {
     console.error('Error al decodificar token:', err)
@@ -148,51 +155,56 @@ const getUserIdFromToken = () => {
 const fetchMessages = async () => {
   try {
     loading.value = true
-    error.value = ''
+    error.value = '' // Reset error at the start
     
-    // Obtener ID del usuario actual
     userId.value = getUserIdFromToken()
-    
-    toast.info('Cargando conversación...', {
-      timeout: 2000
-    })
-    
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
+    if (!userId.value) {
+      // getUserIdFromToken already handles redirect to login if token is bad/missing
+      loading.value = false; // Stop loading if we can't get current user ID
       return
     }
 
-    if (!userId.value) return
+    toast.info('Cargando conversación...', { timeout: 2000 })
+    
+    const response = await messageService.getConversation(route.params.id)
+    console.log('API Response from getConversation:', response); // For debugging
 
-    const response = await axios.get(`/api/messages/${route.params.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-
-    messages.value = response.data
-
-    // Determinar el otro usuario y el artículo
-    if (messages.value.length > 0) {
-      const firstMessage = messages.value[0]
-      otherUser.value = firstMessage.sender._id === userId.value ? 
-        firstMessage.receiver : firstMessage.sender
-
-      // Si hay un artículo asociado, obtener sus detalles
-      if (firstMessage.item) {
-        const itemResponse = await axios.get(`/api/items/${firstMessage.item}`)
-        item.value = itemResponse.data
-      }
+    if (!response || !response.otherUser || !response.otherUser._id) {
+      console.error('Datos del destinatario incompletos o no encontrados en la respuesta de la API:', response);
+      error.value = 'No se pudo cargar la información del destinatario. La conversación no puede mostrarse correctamente.';
+      toast.error('Error: Información del destinatario incompleta.');
+      messages.value = []; // Clear messages if recipient info is bad
+      otherUser.value = {};
+      item.value = null;
+      loading.value = false;
+      return; // Exit early
     }
 
-    // Desplazar al final de los mensajes
+    // If we reach here, response.otherUser and response.otherUser._id are presumed valid
+    messages.value = response.conversation || []
+    otherUser.value = response.otherUser // No || {} needed due to check above
+    item.value = response.item
+
+    // Emitir evento de que la conversación ha sido leída
+    window.dispatchEvent(new CustomEvent('conversationRead'));
+
     await nextTick()
     scrollToBottom()
+
   } catch (err) {
     console.error('Error al cargar la conversación:', err)
-    error.value = 'No se pudo cargar la conversación. Por favor, intenta nuevamente.'
-    toast.error('Error al cargar la conversación')
+    // This catch block handles network errors or errors thrown by messageService
+    let detailedError = 'No se pudo cargar la conversación. Por favor, intenta nuevamente más tarde.'
+    if (err.response && err.response.data && err.response.data.error) {
+        detailedError = `Error del servidor: ${err.response.data.error}`;
+    } else if (err.message) {
+        detailedError = err.message;
+    }
+    error.value = detailedError;
+    toast.error(detailedError)
+    messages.value = []; // Clear data on error
+    otherUser.value = {};
+    item.value = null;
   } finally {
     loading.value = false
   }
@@ -201,6 +213,12 @@ const fetchMessages = async () => {
 // Enviar un nuevo mensaje
 const sendMessage = async () => {
   if (!newMessage.value.trim() || sending.value) return
+
+  if (!otherUser.value || !otherUser.value._id) {
+    toast.error('No se ha podido identificar al destinatario. Por favor, recarga la página.')
+    sending.value = false // Asegurarse de que sending se restablezca
+    return
+  }
   
   sending.value = true
   toast.info('Enviando mensaje...', {
@@ -214,14 +232,10 @@ const sendMessage = async () => {
       return
     }
 
-    const response = await axios.post('/api/messages', {
-      receiverId: otherUser.value._id,
+    const response = await messageService.sendMessage({
+      recipient: otherUser.value._id,
       content: newMessage.value,
-      itemId: item.value ? item.value._id : null
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      item: item.value ? item.value._id : null
     })
 
     // Añadir mensaje a la lista

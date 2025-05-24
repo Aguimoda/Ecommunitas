@@ -120,7 +120,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '../store/auth'
 
 const email = ref('')
 const password = ref('')
@@ -165,6 +165,8 @@ const validatePassword = () => {
   return true
 }
 
+const authStore = useAuthStore()
+
 const handleSubmit = async () => {
   // Validar formulario antes de enviar
   const isEmailValid = validateEmail()
@@ -178,13 +180,10 @@ const handleSubmit = async () => {
     isLoading.value = true
     error.value = ''
     
-    const response = await axios.post('/api/v1/auth/login', {
+    await authStore.login({
       email: email.value,
       password: password.value
     })
-    
-    // Guardar token en localStorage con seguridad
-    localStorage.setItem('token', response.data.token)
     
     // Si hay una redirección pendiente, ir a esa página
     const redirectPath = route.query.redirect || '/'

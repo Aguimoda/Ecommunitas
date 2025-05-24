@@ -180,34 +180,34 @@ const router = useRouter()
 
 // Validación de nombre
 const validateName = () => {
-  nameError.value = ''
-  if (!name.value) {
-    nameError.value = 'El nombre es requerido'
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';  nameError.value = ''
+  if (!name.value.trim()) {
+    nameError.value = 'El nombre es requerido.'
     return false
   }
-  
-  if (name.value.length < 2) {
-    nameError.value = 'El nombre debe tener al menos 2 caracteres'
+  if (name.value.trim().length < 2) {
+    nameError.value = 'El nombre debe tener al menos 2 caracteres.'
     return false
   }
-  
+  if (name.value.trim().length > 50) {
+    nameError.value = 'El nombre no puede tener más de 50 caracteres.'
+    return false
+  }
   return true
 }
 
 // Validación de email
 const validateEmail = () => {
   emailError.value = ''
-  if (!email.value) {
-    emailError.value = 'El email es requerido'
+  if (!email.value.trim()) {
+    emailError.value = 'El email es requerido.'
     return false
   }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email.value)) {
-    emailError.value = 'Por favor, introduce un email válido'
+  const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g; // Regex mejorada para emails
+  if (!emailRegex.test(email.value.trim())) {
+    emailError.value = 'Por favor, introduce un formato de email válido (ej: correo@dominio.com).'
     return false
   }
-  
   return true
 }
 
@@ -215,85 +215,110 @@ const validateEmail = () => {
 const validatePassword = () => {
   passwordError.value = ''
   if (!password.value) {
-    passwordError.value = 'La contraseña es requerida'
+    passwordError.value = 'La contraseña es requerida.'
     return false
   }
-  
-  if (password.value.length < 6) {
-    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+  if (password.value.length < 8) {
+    passwordError.value = 'La contraseña debe tener al menos 8 caracteres.'
     return false
   }
-  
-  // Verificar que la contraseña tenga al menos un número y una letra
-  const hasNumber = /\d/.test(password.value)
-  const hasLetter = /[a-zA-Z]/.test(password.value)
-  
-  if (!hasNumber || !hasLetter) {
-    passwordError.value = 'La contraseña debe contener al menos un número y una letra'
+  if (!/[A-Z]/.test(password.value)) {
+    passwordError.value = 'La contraseña debe contener al menos una letra mayúscula.'
     return false
   }
-  
+  if (!/[0-9]/.test(password.value)) {
+    passwordError.value = 'La contraseña debe contener al menos un número.'
+    return false
+  }
+  if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password.value)) {
+    passwordError.value = 'La contraseña debe contener al menos un carácter especial (ej: !@#$%^&*).'
+    return false
+  }
   return true
 }
 
 // Validación de confirmación de contraseña
 const validateConfirmPassword = () => {
   confirmPasswordError.value = ''
+  // No es necesario validar si está vacío si la contraseña principal ya tiene errores o está vacía
+  if (passwordError.value || !password.value) {
+      // Si la contraseña principal está vacía y se intenta validar la confirmación (ej. en submit),
+      // se muestra el error de confirmación solo si el campo de confirmación también está vacío.
+      if (!password.value && !confirmPassword.value) {
+          confirmPasswordError.value = 'Por favor, confirma tu contraseña.'
+          return false;
+      }
+      return true; 
+  }
+
   if (!confirmPassword.value) {
-    confirmPasswordError.value = 'Debes confirmar tu contraseña'
+    confirmPasswordError.value = 'Por favor, confirma tu contraseña.'
     return false
   }
-  
   if (password.value !== confirmPassword.value) {
-    confirmPasswordError.value = 'Las contraseñas no coinciden'
+    confirmPasswordError.value = 'Las contraseñas no coinciden.'
     return false
   }
-  
   return true
 }
 
 const handleSubmit = async () => {
-  try {
-    // Validar todos los campos antes de enviar
-    const isNameValid = validateName()
-    const isEmailValid = validateEmail()
-    const isPasswordValid = validatePassword()
-    const isConfirmPasswordValid = validateConfirmPassword()
-    
-    if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
-      return
-    }
-    
-    isLoading.value = true
-    error.value = ''
-    
-    const response = await axios.post('/api/v1/auth/register', {
-      name: name.value,
-      email: email.value,
-      password: password.value
-    })
-    
-    // Guardar token en localStorage con seguridad
-    localStorage.setItem('token', response.data.token)
-    
-    // Mostrar mensaje de éxito y redirigir
-    router.push('/login')
-    // Nota: Podríamos mostrar un mensaje de éxito antes de redirigir
-  } catch (err) {
-    if (err.response && err.response.data && err.response.data.message) {
-      // Mostrar el mensaje de error específico del backend
-      error.value = err.response.data.message
-    } else if (err.response && err.response.status === 400) {
-      error.value = 'Datos de registro inválidos. Por favor, verifica la información.'
-    } else if (err.response && err.response.status === 409) {
-      error.value = 'El email ya está registrado. Por favor, utiliza otro email.'
-    } else {
-      error.value = 'Error en el registro. Por favor, intenta nuevamente más tarde.'
-    }
-    console.error('Error de registro:', err)
-    isLoading.value = false
+  error.value = '' // Limpiar errores previos generales
+
+  // Validar todos los campos y guardar su estado
+  const isNameValid = validateName();
+  const isEmailValid = validateEmail();
+  const isPasswordValid = validatePassword();
+  // Validar confirmación de contraseña solo si la contraseña principal es válida
+  const isConfirmPasswordValid = isPasswordValid ? validateConfirmPassword() : false;
+
+  // Si alguna validación individual falla, no continuar con el envío
+  if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
+    // Forzar la visualización de errores si los campos están vacíos al intentar enviar
+    if (!name.value.trim()) validateName();
+    if (!email.value.trim()) validateEmail();
+    if (!password.value) validatePassword();
+    if (password.value && !confirmPassword.value) validateConfirmPassword();
+    return;
   }
-}
+
+  isLoading.value = true;
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+    const response = await axios.post(`${apiUrl}/auth/register`, {
+      name: name.value.trim(),
+      email: email.value.trim(),
+      password: password.value,
+      // No es necesario enviar confirmPassword al backend, ya se validó en el frontend
+    });
+
+    if (response.data && response.data.token) {
+      // Idealmente, usarías Vuex o Pinia para gestionar el estado de autenticación
+      localStorage.setItem('token', response.data.token);
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      router.push({ name: 'Home' }); // O a la vista que consideres apropiada post-registro
+    } else {
+      // Esto podría indicar un problema con la respuesta del backend si no hay token
+      error.value = 'Registro completado, pero hubo un problema al iniciar sesión automáticamente. Intenta iniciar sesión manualmente.';
+    }
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      // Mensaje de error específico del backend
+      error.value = err.response.data.error;
+    } else if (err.request) {
+      // La solicitud se hizo pero no se recibió respuesta (problema de red, servidor caído)
+      error.value = 'No se pudo conectar con el servidor. Verifica tu conexión o inténtalo más tarde.';
+    } else {
+      // Otro tipo de error durante la configuración de la solicitud
+      error.value = 'Ocurrió un error inesperado durante el registro. Por favor, inténtalo de nuevo.';
+    }
+    console.error('Error de registro:', err);
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <style scoped>

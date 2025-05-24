@@ -332,7 +332,7 @@ const totalPages = computed(() => Math.ceil(totalUsers.value / itemsPerPage.valu
 
 const fetchItems = async () => {
   try {
-    const response = await axios.get('/api/v1/items/moderation', {
+    const response = await axios.get('/api/items/moderation', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -345,7 +345,7 @@ const fetchItems = async () => {
 
 const approveItem = async (item) => {
   try {
-    await axios.patch(`/api/v1/items/${item.id}/approve`, {}, {
+    await axios.patch(`/api/items/${item.id}/approve`, {}, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -358,7 +358,7 @@ const approveItem = async (item) => {
 
 const toggleItemAvailability = async (item) => {
   try {
-    await axios.patch(`/api/v1/items/${item.id}/availability`, {
+    await axios.patch(`/api/items/${item.id}/availability`, {
       available: !item.available
     }, {
       headers: {
@@ -373,7 +373,7 @@ const toggleItemAvailability = async (item) => {
 
 const rejectItem = async (item) => {
   try {
-    await axios.patch(`/api/v1/items/${item.id}/reject`, {}, {
+    await axios.patch(`/api/items/${item.id}/reject`, {}, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -386,7 +386,7 @@ const rejectItem = async (item) => {
 
 const fetchAnalytics = async () => {
   try {
-    const response = await axios.get('/api/v1/analytics', {
+    const response = await axios.get('/api/analytics', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }

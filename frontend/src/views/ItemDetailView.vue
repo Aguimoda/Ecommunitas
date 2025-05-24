@@ -35,8 +35,8 @@
         <!-- Galería de imágenes -->
         <div class="relative bg-gray-100 h-64 md:h-96">
           <img 
-            v-if="item.imageUrl" 
-            :src="item.imageUrl" 
+            v-if="item.imageUrl || (item.imageUrls && item.imageUrls.length > 0)" 
+            :src="item.imageUrl ? item.imageUrl : item.imageUrls[0]" 
             :alt="item.title" 
             class="w-full h-full object-contain"
           >
@@ -111,7 +111,7 @@
                 </svg>
                 <div>
                   <span class="text-sm text-gray-500">Publicado por</span>
-                  <p class="font-medium text-gray-800">{{ item.owner?.name || 'Usuario' }}</p>
+                  <p class="font-medium text-gray-800">{{ item.user?.name || 'Usuario' }}</p>
                 </div>
               </div>
             </div>
@@ -153,9 +153,10 @@
             </button>
           </div>
           <div class="p-4">
+            {{console.log(item)}}
             <MessageForm 
-              :recipientId="item.owner._id" 
-              :recipientName="item.owner.name" 
+              :recipientId="item.user._id" 
+              :recipientName="item.user.name" 
               :itemId="item._id" 
               :itemTitle="item.title" 
               @sent="handleMessageSent" 
@@ -174,40 +175,38 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router' // Eliminado useRoute
+// import { useRoute } from 'vue-router' // Se elimina useRoute, se usará defineProps
 import axios from 'axios'
 import MessageForm from '../components/MessageForm.vue'
 
-const route = useRoute()
 const router = useRouter()
 const item = ref(null)
 const loading = ref(true)
 const error = ref('')
 
-// Formatear fecha
-const formatDate = (dateString) => {
-  if (!dateString) return 'Fecha no disponible'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })
-}
+const props = defineProps({
+  id: {
+    type: String,
+    required: true
+  }
+})
 
-// Cargar datos del artículo
 const fetchItemDetails = async () => {
   try {
     loading.value = true
     error.value = ''
     
-    const response = await axios.get(`/api/items/${route.params.id}`, {
+    // Usar props.id en lugar de la variable id local
+
+    //PROBLEMA DE AUTENTICACION CON EL TOKEN DE ACCES
+    const response = await axios.get(`/api/v1/items/${props.id}`, {
       headers: {
         'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined
       }
     })
     
-    item.value = response.data
+    item.value = response.data.data
   } catch (err) {
     if (err.response && err.response.status === 404) {
       error.value = 'El artículo no existe o ha sido eliminado'
@@ -232,6 +231,14 @@ const contactOwner = () => {
     return
   }
   
+  // Verificar si el artículo y el usuario están cargados
+  if (!item.value || !item.value.user) {
+    // Opcional: mostrar un mensaje de error o notificación al usuario
+    console.error('Datos del artículo o usuario no disponibles.');
+    // alert('No se pudo cargar la información del propietario. Intenta de nuevo más tarde.');
+    return;
+  }
+
   // Mostrar formulario de contacto
   showContactForm.value = true
 }
@@ -268,7 +275,10 @@ const shareItem = async () => {
     console.error('Error al compartir:', err)
   }
 }
-
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString(undefined, options);
+};
 onMounted(() => {
   fetchItemDetails()
 })

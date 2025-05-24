@@ -136,9 +136,16 @@ const sendMessage = async () => {
       return
     }
     
+    // Verificar recipientId
+    if (!props.recipientId) {
+      error.value = 'ID de destinatario no definido.'
+      isLoading.value = false;
+      return;
+    }
+    
     // Enviar mensaje
-    const response = await axios.post('/api/messages', {
-      receiverId: props.recipientId,
+    const response = await axios.post('/api/v1/messages', {
+      recipient: props.recipientId,
       subject: subject.value,
       content: message.value,
       itemId: props.itemId

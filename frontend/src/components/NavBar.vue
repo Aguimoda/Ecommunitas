@@ -66,8 +66,9 @@
                   aria-haspopup="true"
                 >
                   <span class="sr-only">Abrir menú de usuario</span>
-                  <div class="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-500 dark:text-indigo-300 transition-colors duration-200">
-                    <span v-if="userInitials" class="text-sm font-medium">{{ userInitials }}</span>
+                  <div class="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-500 dark:text-indigo-300 transition-colors duration-200 overflow-hidden">
+                    <img v-if="userAvatar" :src="userAvatar" class="h-full w-full object-cover" alt="Avatar del usuario">
+                    <span v-else-if="userInitials" class="text-sm font-medium">{{ userInitials }}</span>
                     <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -239,6 +240,8 @@
               {{ unreadMessages }}
             </span>
           </router-link>
+          
+
           <a 
             href="#" 
             class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
@@ -288,20 +291,23 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../store/auth'
 import axios from 'axios'
+
+const messageInterval = ref(null)
 
 const router = useRouter()
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 const isDarkMode = ref(false)
+const userAvatar = ref(null); // Añadido para consistencia
 const userName = ref('Usuario')
 const unreadMessages = ref(0)
 const userInitials = ref('')
 
 // Comprobar si el usuario está autenticado
-const isAuthenticated = computed(() => {
-  return !!localStorage.getItem('token')
-})
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.getIsAuthenticated)
 
 // Obtener información del usuario actual
 const fetchUserInfo = async () => {
@@ -309,7 +315,7 @@ const fetchUserInfo = async () => {
   
   try {
     const token = localStorage.getItem('token')
-    const response = await axios.get('/api/user/profile', {
+    const response = await axios.get('/api/v1/users/profile', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -331,7 +337,7 @@ const fetchUnreadMessages = async () => {
   
   try {
     const token = localStorage.getItem('token')
-    const response = await axios.get('/api/messages/unread', {
+    const response = await axios.get('/api/v1/messages/unread', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -382,11 +388,15 @@ const toggleDarkMode = () => {
 }
 
 // Cerrar sesión
-const logout = () => {
-  localStorage.removeItem('token')
-  showUserMenu.value = false
-  showMobileMenu.value = false
-  router.push('/login')
+const logout = async () => {
+  try {
+    await authStore.logout()
+    showUserMenu.value = false;
+    showMobileMenu.value = false;
+    router.push('/login')
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error)
+  }
 }
 
 // Cerrar menú de usuario al hacer clic fuera
@@ -398,15 +408,23 @@ const handleClickOutside = (event) => {
 }
 
 // Observar cambios en la autenticación
-watch(isAuthenticated, (newValue) => {
-  if (newValue) {
-    fetchUserInfo()
-    fetchUnreadMessages()
-  } else {
-    userName.value = 'Usuario'
-    unreadMessages.value = 0
+watch(isAuthenticated, (newValue, oldValue) => {
+  if (newValue) { // Usuario se ha autenticado o estado inicial es autenticado
+    fetchUserInfo();
+    fetchUnreadMessages();
+    if (messageInterval.value) clearInterval(messageInterval.value);
+    messageInterval.value = setInterval(fetchUnreadMessages, 30000); // Usar 30000 consistentemente
+  } else { // Usuario ha cerrado sesión o estado inicial no es autenticado
+    userName.value = 'Usuario';
+    userInitials.value = '';
+    userAvatar.value = null; // Limpiar avatar
+    unreadMessages.value = 0;
+    if (messageInterval.value) {
+      clearInterval(messageInterval.value);
+      messageInterval.value = null;
+    }
   }
-})
+}, { immediate: true }); // Ejecutar inmediatamente en el montaje
 
 // Inicializar el modo oscuro según la preferencia guardada
 onMounted(() => {
@@ -418,35 +436,39 @@ onMounted(() => {
     // Si no hay preferencia guardada, usar la preferencia del sistema
     isDarkMode.value = true
     document.documentElement.classList.add('dark')
-    localStorage.setItem('darkMode', 'true')
+    localStorage.setItem('darkMode', 'true') // Guardar la preferencia del sistema
   }
-  
-  // Cargar información del usuario si está autenticado
-  if (isAuthenticated.value) {
-    fetchUserInfo()
-    fetchUnreadMessages()
-    
-    // Configurar intervalo para verificar mensajes no leídos cada minuto
-    const messageInterval = setInterval(() => {
-      if (isAuthenticated.value) {
-        fetchUnreadMessages()
-      } else {
-        clearInterval(messageInterval)
-      }
-    }, 60000) // 60 segundos
-    
-    // Limpiar intervalo al desmontar
-    onUnmounted(() => {
-      clearInterval(messageInterval)
-    })
-  }
-})
 
-// Añadir event listener al montar el componente
-document.addEventListener('click', handleClickOutside)
+  document.addEventListener('click', handleClickOutside)
+  // Escuchar el evento de conversación leída
+  window.addEventListener('conversationRead', fetchUnreadMessages);
+});
 
-// Limpiar event listener al desmontar el componente
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-})
+  // Remover el listener del evento de conversación leída
+  window.removeEventListener('conversationRead', fetchUnreadMessages);
+  if (messageInterval.value) {
+    clearInterval(messageInterval.value)
+  }
+});
+
+// Para asegurar que el estado de autenticación se actualice si cambia en otra pestaña/ventana
+window.addEventListener('storage', (event) => {
+  if (event.key === 'token') {
+    const newToken = event.newValue;
+    isAuthenticated.value = !!newToken;
+  }
+});
+
 </script>
+
+<style scoped>
+/* Estilos adicionales si son necesarios */
+.dark .text-indigo-600 { 
+  color: #818cf8; /* Un tono de índigo más claro para el modo oscuro */
+}
+.dark .hover\:text-indigo-500:hover {
+  color: #a7a7f0; /* Un tono de índigo aún más claro para hover en modo oscuro */
+}
+</style>

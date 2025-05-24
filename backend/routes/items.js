@@ -4,8 +4,12 @@ const {
   getItem,
   createItem,
   updateItem,
-  deleteItem
+  deleteItem,
+  getItemsByUser // Añadir la importación que falta
 } = require('../controllers/items');
+
+// Importar el controlador de búsqueda avanzada
+const { searchItems } = require('../controllers/itemsGeo');
 
 const router = express.Router();
 
@@ -16,19 +20,28 @@ const Item = require('../models/Item');
 
 // Rutas públicas
 router.route('/')
-  .get(advancedResults(Item, 'user'), getItems);
+  .get(advancedResults(Item, 'user'), getItems)
+  .post(protect, createItem);
+  // Ruta para búsqueda avanzada
+router.route('/search')
+  .get(searchItems);
 
 router.route('/:id')
-  .get(getItem);
+  .get(getItem)
+  .put(protect, updateItem)
+  .delete(protect, (req, res, next) => {
+    console.log('RUTA DELETE /:id alcanzada. ID recibido:', req.params.id);
+    console.log('Usuario autenticado:', req.user ? req.user.id : 'No autenticado');
+    return deleteItem(req, res, next);
+  });
 
-// Rutas protegidas (requieren autenticación)
-router.use(protect);
+// Ruta para obtener items por usuario
+router.route('/user/:userId') // Esta ruta ya está correctamente prefijada por el montaje en server.js si se accede como /api/v1/items/user/:userId
+  .get(getItemsByUser);
 
-router.route('/')
-  .post(createItem);
 
-router.route('/:id')
-  .put(updateItem)
-  .delete(deleteItem);
 
 module.exports = router;
+
+// Export alternativo para compatibilidad con frontend
+module.exports.itemsRouter = router;

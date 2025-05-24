@@ -8,6 +8,8 @@ const asyncHandler = require('../middleware/async');
  * @access  Public
  */
 exports.searchItems = asyncHandler(async (req, res, next) => {
+  console.log('SearchItems called with query:', req.query);
+  
   // Extraer parámetros de consulta
   const {
     q, // Consulta de texto
@@ -27,7 +29,23 @@ exports.searchItems = asyncHandler(async (req, res, next) => {
 
   // Filtro por texto (título y descripción)
   if (q) {
-    query.$text = { $search: q };
+    const searchText = q.trim();
+    console.log('Search text:', searchText);
+    
+    // Usar índice de texto para la búsqueda si hay texto
+    if (searchText.length > 0) {
+      try {
+        // Intentar usar el índice de texto
+        query.$text = { $search: searchText };
+      } catch (err) {
+        console.error('Error al usar índice de texto:', err);
+        // Fallback a búsqueda por regex si falla el índice de texto
+        query.$or = [
+          { title: { $regex: searchText, $options: 'i' } },
+          { description: { $regex: searchText, $options: 'i' } }
+        ];
+      }
+    }
   }
 
   // Filtro por categoría
@@ -65,10 +83,14 @@ exports.searchItems = asyncHandler(async (req, res, next) => {
     }
   }
 
+  console.log('Final query object:', JSON.stringify(query, null, 2));
+
   // Opciones de paginación
   const startIndex = (parseInt(page) - 1) * parseInt(limit);
   const endIndex = parseInt(page) * parseInt(limit);
   const total = await Item.countDocuments(query);
+
+  console.log(`Found ${total} items matching query`);
 
   // Opciones de ordenación
   let sortOptions = {};
@@ -86,24 +108,32 @@ exports.searchItems = asyncHandler(async (req, res, next) => {
       sortOptions = { title: -1 };
       break;
     case 'nearest':
-      // La ordenación por cercanía se maneja automáticamente con $near
-      if (!lat || !lng) {
-        sortOptions = { createdAt: -1 }; // Default si no hay coordenadas
+      // Si se está ordenando por cercanía, asegurarse de que hay coordenadas
+      if (lat && lng && Item.schema.paths.coordinates) {
+        // La ordenación por cercanía ya está implícita en la consulta $near
+        // No es necesario especificar opciones de ordenación adicionales
+      } else {
+        // Si no hay coordenadas, ordenar por fecha de creación (más recientes primero)
+        sortOptions = { createdAt: -1 };
       }
       break;
     default:
-      sortOptions = { createdAt: -1 };
+      sortOptions = { createdAt: -1 }; // Por defecto, ordenar por fecha de creación (más recientes primero)
   }
 
-  // Ejecutar la consulta
+  // Ejecutar la consulta con paginación y ordenación
   const items = await Item.find(query)
-    .populate('user', 'name')
     .sort(sortOptions)
     .skip(startIndex)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .populate({
+      path: 'user',
+      select: 'name email'
+    });
 
   // Información de paginación
   const pagination = {};
+
   if (endIndex < total) {
     pagination.next = {
       page: parseInt(page) + 1,
@@ -118,39 +148,33 @@ exports.searchItems = asyncHandler(async (req, res, next) => {
     };
   }
 
-  // Respuesta
   res.status(200).json({
     success: true,
     count: items.length,
-    pagination,
     total,
-    items
+    pagination,
+    data: items
   });
 });
 
 /**
- * @desc    Actualizar el modelo Item para soportar consultas geoespaciales
- * @route   POST /api/items/update-geo-index
+ * @desc    Actualizar índice geoespacial
+ * @route   GET /api/items/geo/update-index
  * @access  Private/Admin
  */
 exports.updateGeoIndex = asyncHandler(async (req, res, next) => {
-  // Esta función debe ser ejecutada por un administrador para actualizar el esquema
-  // y añadir índices geoespaciales si no existen
+  // Esta función es para crear o actualizar el índice geoespacial en la colección de ítems
+  // Solo debería ser accesible para administradores
   
-  // Verificar si el usuario es administrador
-  if (req.user.role !== 'admin') {
-    return next(new ErrorResponse('No autorizado para realizar esta acción', 403));
-  }
-
-  // Crear índice geoespacial si no existe
   try {
+    // Crear índice geoespacial en el campo 'coordinates'
     await Item.collection.createIndex({ coordinates: '2dsphere' });
     
     res.status(200).json({
       success: true,
-      message: 'Índice geoespacial creado correctamente'
+      message: 'Índice geoespacial actualizado correctamente'
     });
   } catch (error) {
-    return next(new ErrorResponse('Error al crear índice geoespacial', 500));
+    return next(new ErrorResponse(`Error al actualizar índice geoespacial: ${error.message}`, 500));
   }
 });

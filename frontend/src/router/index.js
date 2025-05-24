@@ -43,6 +43,7 @@ const routes = [
     component: () => import('../views/ProfileView.vue'),
     meta: { requiresAuth: true }
   },
+  // La ruta de edición de perfil se ha eliminado porque ahora se maneja como un modal en ProfileView.vue
   {
     path: '/messages',
     name: 'Messages',

@@ -1,4 +1,4 @@
-import { Headers } from 'axios'
+import Headers  from 'axios'
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 
