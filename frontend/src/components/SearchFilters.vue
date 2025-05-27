@@ -12,7 +12,7 @@
             id="search" 
             v-model="internalFilters.query" 
             placeholder="Buscar artículos..."
-            @keyup.enter="applyFilters"
+            @keyup.enter="applyFiltersHandler"
             aria-label="Buscar artículos"
             autocomplete="off"
             class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -31,7 +31,7 @@
         <select 
           id="category" 
           v-model="internalFilters.category"
-          @change="applyFilters"
+          @change="emitUpdateFilters"
           aria-label="Filtrar por categoría"
           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         >
@@ -53,7 +53,7 @@
             id="location" 
             v-model="internalFilters.location" 
             placeholder="Filtrar por ubicación"
-            @keyup.enter="applyFilters"
+            @keyup.enter="applyFiltersHandler"
             aria-label="Filtrar por ubicación"
             autocomplete="off"
             class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -75,7 +75,7 @@
         <select 
           id="condition" 
           v-model="internalFilters.condition"
-          @change="applyFilters"
+          @change="emitUpdateFilters"
           aria-label="Filtrar por condición"
           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         >
@@ -88,7 +88,8 @@
         </select>
       </div>
       
-      <!-- Filtro por radio de distancia -->
+      <!-- Filtro por radio de distancia (Desactivado temporalmente) -->
+      <!--
       <div>
         <label for="distance" class="block text-sm font-medium text-gray-700 mb-1">Radio de búsqueda:</label>
         <div class="flex items-center">
@@ -96,7 +97,7 @@
             type="range" 
             id="distance" 
             v-model.number="internalFilters.distance" 
-            @change="applyFilters"
+            @input="emitUpdateFilters" 
             min="1" 
             max="50" 
             step="1"
@@ -105,6 +106,7 @@
           <span class="ml-2 text-sm text-gray-600 w-16">{{ internalFilters.distance }} km</span>
         </div>
       </div>
+      -->
       
       <!-- Ordenar por -->
       <div>
@@ -112,7 +114,7 @@
         <select 
           id="sort" 
           v-model="internalFilters.sort"
-          @change="applyFilters"
+          @change="emitUpdateFilters"
           aria-label="Ordenar resultados"
           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         >
@@ -128,7 +130,7 @@
     <!-- Botones de acción -->
     <div class="flex flex-col sm:flex-row justify-between items-center gap-2 mt-4">
       <button 
-        @click="applyFilters"
+        @click="applyFiltersHandler"
         aria-label="Aplicar filtros"
         class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center"
       >
@@ -139,7 +141,7 @@
       </button>
       
       <button 
-        @click="resetFilters"
+        @click="resetFiltersHandler"
         aria-label="Limpiar todos los filtros"
         class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center"
       >
@@ -174,7 +176,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useGeolocation } from '@/composables/useGeolocation';
+// import { useGeolocation } from '@/composables/useGeolocation'; // Desactivado temporalmente
 import { componentDefaultFilters } from './searchFiltersConstants.js';
 
 // componentDefaultFilters is imported from './searchFiltersConstants.js'
@@ -194,8 +196,8 @@ const internalFilters = ref({
   ...(props.filters ? props.filters : {})
 });
 
-// Composable para obtener la geolocalización
-const { coordinates, getLocation, loading: geoLoading, error: geoError } = useGeolocation();
+// Composable para obtener la geolocalización (Desactivado temporalmente)
+// const { coordinates, getLocation, loading: geoLoading, error: geoError } = useGeolocation();
 
 // Watch for external changes to props.filters and update internal state
 // This ensures two-way binding with v-model:filters works correctly
@@ -203,12 +205,15 @@ watch(() => props.filters, (newPropFilters) => {
   internalFilters.value = { ...componentDefaultFilters, ...(newPropFilters || {}) };
 }, { deep: true });
 
-// Observar cambios en las coordenadas geográficas y actualizar el estado interno
+// Observar cambios en las coordenadas geográficas y actualizar el estado interno (Desactivado temporalmente)
+/*
 watch(coordinates, (newCoords) => {
   if (newCoords) {
     internalFilters.value.coordinates = newCoords;
+    // Considerar emitir update:filters aquí si es necesario que el padre sepa de las coordenadas inmediatamente
   }
 });
+*/
 
 // Filtros activos (excluyendo valores vacíos, valores por defecto y campos específicos)
 const activeFilters = computed(() => {
@@ -285,28 +290,39 @@ const getSortLabel = (value) => {
   return sorts[value] || value;
 };
 
-// Aplicar filtros
-const applyFilters = () => {
-  // Si se está ordenando por cercanía y no hay coordenadas, intentar obtener la ubicación
-  if (internalFilters.value.sort === 'nearest' && !internalFilters.value.coordinates) {
-    getLocation();
+// Emitir actualización de filtros al padre
+const emitUpdateFilters = () => {
+  // Comprobar si los filtros internos son diferentes de los props para evitar bucles
+  if (JSON.stringify(internalFilters.value) !== JSON.stringify(props.filters)) {
+    emit('update:filters', { ...internalFilters.value });
   }
-  
-  // Resetear página a 1 cuando se aplican nuevos filtros
-  internalFilters.value.page = 1;
-  
-  console.log('SearchFilters - Aplicando filtros:', internalFilters.value);
-  
-  // Emitir evento 'apply' con los filtros actuales.
-  // El evento 'update:filters' se emite automáticamente por el watcher de `internalFilters`.
-  emit('apply', { ...internalFilters.value });
 };
 
-// Resetear filtros a sus valores por defecto
-const resetFilters = () => {
-  internalFilters.value = { ...componentDefaultFilters };
-  // El watcher de `internalFilters` se encargará de emitir 'update:filters'.
-  emit('reset');
+// Watch para internalFilters para emitir update:filters automáticamente
+watch(internalFilters, () => {
+  emitUpdateFilters();
+}, { deep: true });
+
+// Aplicar filtros (ahora solo emite 'apply')
+const applyFiltersHandler = () => {
+  // La obtención de geolocalización se desactiva temporalmente
+  // if (internalFilters.value.sort === 'nearest' && !internalFilters.value.coordinates) {
+  //   getLocation(); // Esto podría ser asíncrono, considerar cómo manejarlo
+  // }
+  
+  // Resetear página a 1 cuando se aplican nuevos filtros (el padre se encargará de esto)
+  // internalFilters.value.page = 1; // El padre debe manejar la paginación
+  
+  console.log('SearchFilters - Solicitando aplicar filtros con:', JSON.stringify(internalFilters.value));
+  emit('apply'); // Solo notifica al padre que aplique los filtros que ya tiene (vía v-model)
+};
+
+// Resetear filtros (ahora solo emite 'reset')
+const resetFiltersHandler = () => {
+  internalFilters.value = { ...componentDefaultFilters }; // Esto disparará el watch y emitirá update:filters
+  // internalFilters.value.page = 1; // El padre debe manejar la paginación
+  console.log('SearchFilters - Solicitando resetear filtros.');
+  emit('reset'); // Notifica al padre que resetee y aplique (el padre ya tiene los filtros reseteados vía v-model)
 };
 
 // Eliminar un filtro específico, restaurándolo a su valor por defecto
@@ -320,8 +336,9 @@ const removeFilter = (key) => {
   applyFilters(); // Reaplicar filtros después de eliminar uno
 };
 
-// Observar cambios en los filtros para actualizar el componente padre
+// Observar cambios en los filtros para actualizar el componente padre y aplicar automáticamente
 watch(internalFilters, (newFilters) => {
+  // Solo emitir el evento update:filters sin llamar a applyFilters
   emit('update:filters', { ...newFilters });
 }, { deep: true });
 </script>

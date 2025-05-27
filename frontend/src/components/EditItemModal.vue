@@ -101,10 +101,10 @@ watch(() => props.item, (newItem) => {
     form.value = {
       _id: newItem._id,
       title: newItem.title || '',
-      description: newItem.description || '', // Asumiendo que hay un campo description
+      description: newItem.description || '',
       price: newItem.price || 0,
       location: newItem.location || '',
-      currentImage: newItem.image || newItem.imageUrl || '', // 'image' o 'imageUrl'
+      currentImage: (newItem.imageUrls && newItem.imageUrls.length > 0) ? newItem.imageUrls[0] : (newItem.image || newItem.imageUrl || ''),
     };
     previewImage.value = form.value.currentImage;
     selectedFile.value = null; // Resetear el archivo seleccionado
@@ -146,7 +146,7 @@ const submitForm = async () => {
     formData.append('location', form.value.location);
     // Solo añadir la imagen si se ha seleccionado una nueva
     if (selectedFile.value) {
-      formData.append('image', selectedFile.value);
+      formData.append('images', selectedFile.value); // Cambiado de 'image' a 'images'
     }
 
     const response = await axios.put(`/api/v1/items/${form.value._id}`, formData, {
@@ -188,7 +188,7 @@ onMounted(() => {
       description: props.item.description || '',
       price: props.item.price || 0,
       location: props.item.location || '',
-      currentImage: props.item.image || props.item.imageUrl || '',
+      currentImage: (props.item.imageUrls && props.item.imageUrls.length > 0) ? props.item.imageUrls[0] : (props.item.image || props.item.imageUrl || ''),
     };
     previewImage.value = form.value.currentImage;
   }

@@ -337,7 +337,8 @@ const fetchUnreadMessages = async () => {
   
   try {
     const token = localStorage.getItem('token')
-    const response = await axios.get('/api/v1/messages/unread', {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+    const response = await axios.get(`${API_URL}/messages/unread`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -345,9 +346,13 @@ const fetchUnreadMessages = async () => {
     
     if (response.data && response.data.count !== undefined) {
       unreadMessages.value = response.data.count
+    } else if (response.data && Array.isArray(response.data)) {
+      // Si la respuesta es un array de mensajes, contar la longitud
+      unreadMessages.value = response.data.length
     }
   } catch (err) {
     console.error('Error al obtener mensajes no leídos:', err)
+    // No mostrar error al usuario para evitar spam de notificaciones
   }
 }
 

@@ -130,7 +130,7 @@ function mapUserToProfile(user: any): Profile {
     name: user.name || '',
     bio: user.bio || '',
     location: user.location || '',
-    avatarUrl: user.avatar || null // Assuming backend field is 'avatar'
+    avatarUrl: user.avatarUrl || user.avatar || null // Ensure avatarUrl is prioritized, fallback to avatar
   };
 }
 
@@ -150,6 +150,7 @@ onMounted(async () => {
         bio: fetchedProfile.value.bio,
         location: fetchedProfile.value.location,
       };
+      // Use avatarUrl from fetchedProfile for preview
       previewImage.value = fetchedProfile.value.avatarUrl;
     } else {
       toast.error(response.data.error || 'Error al cargar el perfil');
@@ -190,7 +191,7 @@ const submitForm = async () => {
     formData.append('location', form.value.location)
     
     if (selectedFile.value) {
-      formData.append('avatar', selectedFile.value) // Key 'avatar' should match backend (e.g., multer fieldname)
+      formData.append('avatar', selectedFile.value) // Ensure key is 'avatar'
     }
     
     const token = localStorage.getItem('token');

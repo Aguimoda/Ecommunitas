@@ -13,6 +13,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const advancedResults = require('../middleware/advancedResults');
 const User = require('../models/User');
+const fileUpload = require('express-fileupload'); // Importar express-fileupload
 
 // Todas las rutas requieren autenticación
 router.use(protect);
@@ -27,7 +28,14 @@ router.route('/profile').get(getProfile);
 // Rutas para usuarios normales y administradores
 router.route('/:id')
   .get(getUser)
-  .put(updateUser)
+  .put(fileUpload({
+    createParentPath: true,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max file size
+    abortOnLimit: true,
+    useTempFiles: true,
+    tempFileDir: process.env.FILE_UPLOAD_PATH || require('path').join(__dirname, '../uploads'), // Ensure path is correct
+    debug: process.env.NODE_ENV === 'development'
+  }), updateUser) // Aplicar express-fileupload directamente
   .delete(authorize('admin'), deleteUser);
 
 module.exports = router;

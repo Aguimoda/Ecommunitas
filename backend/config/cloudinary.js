@@ -22,8 +22,10 @@ exports.uploadImage = async (filePath) => {
     // Delete file from server after upload
     fs.unlinkSync(filePath);
 
-    return result.secure_url;
+    // Devolver el objeto completo en lugar de solo la URL
+    return result;
   } catch (error) {
+    console.error('Error uploading image to Cloudinary:', error);
     throw error;
   }
 };

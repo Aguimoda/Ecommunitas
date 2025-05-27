@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Fondo con gradiente suave -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e0e0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rectángulo de fondo -->
+  <rect width="400" height="300" fill="url(#grad1)" />
+  
+  <!-- Icono de imagen -->
+  <g transform="translate(125, 75)" fill="#9e9e9e">
+    <!-- Marco de la imagen -->
+    <rect x="0" y="0" width="150" height="120" rx="8" ry="8" fill="none" stroke="#9e9e9e" stroke-width="8" />
+    
+    <!-- Montaña izquierda -->
+    <path d="M0,120 L60,60 L90,90 L150,30 L150,120 Z" />
+    
+    <!-- Sol -->
+    <circle cx="120" cy="30" r="15" />
+  </g>
+  
+  <!-- Texto "Sin imagen" -->
+  <text x="200" y="230" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#757575">Sin imagen</text>
+</svg>

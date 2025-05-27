@@ -6,8 +6,9 @@ const {
   markAsRead,
   deleteMessage,
   getUnreadMessages,
-  checkNewMessages, // Añadir la función que falta
-  getConversations // Controlador para obtener todas las conversaciones
+  checkNewMessages,
+  getConversations,
+  markConversationAsRead
 } = require('../controllers/messages');
 
 const router = express.Router();
@@ -24,11 +25,11 @@ router.route('/')
   .post(sendMessage);
 
 router.route('/unread').get(getUnreadMessages);
-router.route('/conversation/:userId').get(getConversation);
+router.route('/conversations').get(getConversations);
+router.route('/conversations/:userId').get(getConversation);
+router.route('/conversations/:userId/read').put(markConversationAsRead);
 router.route('/:id/read').put(markAsRead);
 router.route('/:id').delete(deleteMessage);
-router.route('/check-new').get(checkNewMessages);
-router.route('/conversations').get(getConversations);
 
 module.exports = router;
 

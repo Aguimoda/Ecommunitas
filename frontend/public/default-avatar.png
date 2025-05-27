@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Fondo circular con gradiente -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Círculo de fondo -->
+  <circle cx="100" cy="100" r="100" fill="url(#grad1)" />
+  
+  <!-- Silueta de persona -->
+  <g fill="#ffffff">
+    <!-- Cabeza -->
+    <circle cx="100" cy="80" r="35" />
+    
+    <!-- Cuerpo -->
+    <path d="M100,120 C65,120 40,150 40,190 L160,190 C160,150 135,120 100,120 Z" />
+  </g>
+</svg>

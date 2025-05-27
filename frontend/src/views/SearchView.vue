@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50 p-6">
     <h1 class="text-3xl font-bold text-center mb-8">Buscar Artículos</h1>
     
-    <!-- Componente de filtros avanzados -->
+.    <!-- Componente de filtros avanzados -->
     <SearchFilters    v-model:filters="searchFilters"
       @apply="handleApplyFilters"
       @reset="handleResetFilters"
@@ -224,31 +224,38 @@ const validateSearchParams = () => {
   // Permitir búsquedas con 1 carácter o más
   if (searchFilters.value.query !== undefined && searchFilters.value.query.trim().length === 0) {
     searchFilters.value.query = ''; // Limpiar espacios en blanco
+    console.log('SearchView - Búsqueda vacía, limpiando espacios');
     return null; // No es un error, solo limpiamos
   }
   
   const dangerousChars = /[<>{}]/g;
   if (searchFilters.value.query && dangerousChars.test(searchFilters.value.query)) {
+    console.log('SearchView - Búsqueda con caracteres peligrosos');
     return 'La búsqueda contiene caracteres no permitidos';
   }
   
   if (searchFilters.value.query && searchFilters.value.query.length > 100) {
+    console.log('SearchView - Búsqueda demasiado larga');
     return 'La búsqueda es demasiado larga';
   }
   
   if (searchFilters.value.location && dangerousChars.test(searchFilters.value.location)) {
+    console.log('SearchView - Ubicación con caracteres peligrosos');
     return 'La ubicación contiene caracteres no permitidos';
   }
   
   if (searchFilters.value.location && searchFilters.value.location.length > 100) {
+    console.log('SearchView - Ubicación demasiado larga');
     return 'La ubicación es demasiado larga';
   }
   
+  console.log('SearchView - Validación de parámetros exitosa');
   return null; // Devuelve null si no hay errores de validación
 };
 
 const fetchItems = async () => {
   if (loading.value) {
+    console.log('SearchView - Ya hay una búsqueda en curso, ignorando nueva solicitud');
     return; // Evitar llamadas concurrentes si ya se está cargando
   }
 
@@ -261,6 +268,7 @@ const fetchItems = async () => {
   if (validationError) {
     error.value = validationError;
     loading.value = false; // Detener la carga si hay error de validación
+    console.log('SearchView - Error de validación:', validationError);
     return;
   }
   
@@ -273,7 +281,9 @@ const fetchItems = async () => {
       limit: itemsPerPage.value,
     };
     
-    console.log('SearchView - Enviando filtros al servicio:', paramsForService);
+    console.log('SearchView - Enviando filtros al servicio:', JSON.stringify(paramsForService));
+    console.log('SearchView - Categoría:', paramsForService.category);
+    console.log('SearchView - Condición:', paramsForService.condition);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
@@ -281,12 +291,25 @@ const fetchItems = async () => {
     const response = await searchItemsService(paramsForService, { signal: controller.signal });
     clearTimeout(timeoutId);
     
-    console.log('SearchView - Respuesta del servicio:', response);
+    console.log('SearchView - Respuesta del servicio:', JSON.stringify(response));
     
     if (response && response.data) {
       items.value = response.data || [];
       totalItems.value = response.total || 0;
       console.log('SearchView - Items cargados:', items.value.length, 'de', totalItems.value);
+      
+      // Verificar si los filtros se aplicaron correctamente
+      if (searchFilters.value.category) {
+        console.log('SearchView - Verificando filtro de categoría:', searchFilters.value.category);
+        const itemsWithCategory = items.value.filter(item => item.category === searchFilters.value.category);
+        console.log('SearchView - Items con la categoría especificada:', itemsWithCategory.length);
+      }
+      
+      if (searchFilters.value.condition) {
+        console.log('SearchView - Verificando filtro de condición:', searchFilters.value.condition);
+        const itemsWithCondition = items.value.filter(item => item.condition === searchFilters.value.condition);
+        console.log('SearchView - Items con la condición especificada:', itemsWithCondition.length);
+      }
     } else {
       console.error('SearchView - Respuesta inesperada del servicio:', response);
       error.value = 'Formato de respuesta inesperado del servidor';
@@ -296,62 +319,74 @@ const fetchItems = async () => {
 
     if (err.name === 'AbortError') {
       error.value = 'La búsqueda tardó demasiado y fue cancelada. Intente nuevamente.';
+      console.log('SearchView - Error de timeout en la búsqueda');
     } else if (err.response) {
       error.value = `Error ${err.response.status}: ${err.response.data?.message || 'Error al buscar artículos'}`;
+      console.log(`SearchView - Error de respuesta: ${err.response.status}`);
     } else if (err.request) {
       error.value = 'No se pudo conectar con el servidor. Verifique su conexión.';
+      console.log('SearchView - Error de conexión con el servidor');
     } else {
       error.value = 'Error al buscar artículos. Por favor intente nuevamente.';
+      console.log('SearchView - Error general:', err.message);
     }
     // items.value y totalItems.value ya fueron reseteados al inicio
   } finally {
     loading.value = false;
+    console.log('SearchView - Búsqueda finalizada, loading:', loading.value);
   }
 };
 
 // Observar cambios en la página actual para actualizar los resultados
+// Añadimos una variable para controlar si el cambio de página viene de los handlers
+const isChangingFromHandlers = ref(false);
+
 watch(currentPage, () => {
-  fetchItems(); // Llamada simplificada
+  // Solo llamar a fetchItems si el cambio no viene de los handlers
+  if (!isChangingFromHandlers.value) {
+    fetchItems();
+  }
+  // Resetear la bandera después de cada cambio
+  isChangingFromHandlers.value = false;
 });
 
-// Nuevos manejadores para los eventos de SearchFilters
-const handleApplyFilters = (filters) => {
-  console.log('SearchView - Filtros recibidos del componente SearchFilters:', filters);
-  // Actualizar el estado local con los filtros recibidos
-  searchFilters.value = { ...filters };
+// Manejador para el evento 'apply' de SearchFilters
+const handleApplyFilters = () => {
+  console.log('SearchView - Evento apply recibido. Filtros actuales:', JSON.stringify(searchFilters.value));
+  // Los filtros ya están sincronizados mediante v-model:filters
   
-  if (currentPage.value !== 1) {
-    currentPage.value = 1; // El watcher de currentPage se encargará de llamar a fetchItems
-  } else {
-    // Si currentPage ya es 1, el watcher no se activará.
-    // Usar nextTick para asegurar que cualquier cambio de estado pendiente se procese
-    // antes de llamar a fetchItems.
-    nextTick(() => {
-      fetchItems();
-    });
-  }
+  // Establecer la bandera antes de cambiar la página
+  isChangingFromHandlers.value = true;
+  // Siempre volver a la página 1 al aplicar nuevos filtros
+  currentPage.value = 1;
+  
+  // Usar nextTick para asegurar que cualquier cambio de estado pendiente se procese
+  // antes de llamar a fetchItems.
+  nextTick(() => {
+    fetchItems();
+  });
 };
 
+// Manejador para el evento 'reset' de SearchFilters
 const handleResetFilters = () => {
-  // Resetear los valores de searchFilters a sus defaults
-  searchFilters.value.query = '';
-  searchFilters.value.category = '';
-  searchFilters.value.location = '';
-  searchFilters.value.condition = '';
-  searchFilters.value.distance = 10; // Asegúrate que este es el valor por defecto correcto
-  searchFilters.value.sort = 'recent'; // Asegúrate que este es el valor por defecto correcto
-  searchFilters.value.coordinates = null;
+  console.log('SearchView - Evento reset recibido. Filtros actuales antes del reset en padre:', JSON.stringify(searchFilters.value));
+  // Los filtros se resetean en SearchFilters y se sincronizan mediante v-model:filters.
+  // No es necesario resetearlos explícitamente aquí si v-model funciona correctamente.
+  // Sin embargo, para asegurar la consistencia si hay alguna demora en la propagación de v-model,
+  // podemos forzar el reseteo aquí también, aunque idealmente no sería necesario.
+  // searchFilters.value = { ...componentDefaultFiltersFromSearchFilters }; // Necesitaríamos los defaults aquí
+
+  // Establecer la bandera antes de cambiar la página
+  isChangingFromHandlers.value = true;
+  // Siempre volver a la página 1 al resetear filtros
+  currentPage.value = 1;
   
-  if (currentPage.value !== 1) {
-    currentPage.value = 1; // El watcher se encargará
-  } else {
-    // Si currentPage ya es 1, el watcher no se activará.
-    // Usar nextTick para asegurar que cualquier cambio de estado pendiente se procese
-    // antes de llamar a fetchItems.
-    nextTick(() => {
-      fetchItems(); // Llamar directamente si ya está en la página 1
-    });
-  }
+  // Usar nextTick para asegurar que los filtros (actualizados por v-model desde SearchFilters)
+  // se hayan propagado antes de llamar a fetchItems.
+  nextTick(() => {
+    console.log('SearchView - Filtros después del reset (en nextTick):', JSON.stringify(searchFilters.value));
+    fetchItems();
+  });
 };
 
 // Cargar datos iniciales al montar el componente

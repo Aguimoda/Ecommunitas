@@ -32,14 +32,14 @@
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
       >
-        <option value="" disabled>Select a category</option> // Added default disabled option
+        <option value="" disabled>Select a category</option>
         <option value="books">Books</option>
         <option value="electronics">Electronics</option>
         <option value="clothing">Clothing</option>
         <option value="furniture">Furniture</option>
         <option value="other">Other</option>
       </select>
-      <p v-if="errors.category" class="mt-2 text-sm text-red-600">{{ errors.category }}</p> // Added category error display
+      <p v-if="errors.category" class="mt-2 text-sm text-red-600">{{ errors.category }}</p>
     </div>
 
     <div>
@@ -50,14 +50,14 @@
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
       >
-        <option value="" disabled>Select condition</option> // Added default disabled option
+        <option value="" disabled>Select condition</option>
         <option value="new">New</option>
         <option value="like_new">Like New</option>
         <option value="good">Good</option>
         <option value="fair">Fair</option>
         <option value="poor">Poor</option>
       </select>
-      <p v-if="errors.condition" class="mt-2 text-sm text-red-600">{{ errors.condition }}</p> // Added condition error display
+      <p v-if="errors.condition" class="mt-2 text-sm text-red-600">{{ errors.condition }}</p>
     </div>
 
     <div>
@@ -69,13 +69,13 @@
         required
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
       />
-      <p v-if="errors.location" class="mt-2 text-sm text-red-600">{{ errors.location }}</p> // Added location error display
+      <p v-if="errors.location" class="mt-2 text-sm text-red-600">{{ errors.location }}</p>
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700">Image (Required)</label> // Changed label to Required
+      <label class="block text-sm font-medium text-gray-700">Image (Required)</label>
       <ImageUploader @file-selected="handleImageUpload" />
-      <p v-if="errors.image" class="mt-2 text-sm text-red-600">{{ errors.image }}</p> // Changed error key to 'image'
+      <p v-if="errors.image" class="mt-2 text-sm text-red-600">{{ errors.image }}</p>
     </div>
 
     <div>
@@ -84,15 +84,15 @@
         :disabled="isSubmitting"
         class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
       >
-        {{ isSubmitting ? 'Processing...' : (isEditing ? 'Update Item' : 'Submit Item') }} // Updated button text
+        {{ isSubmitting ? 'Processing...' : (isEditing ? 'Update Item' : 'Submit Item') }}
       </button>
     </div>
-    <p v-if="errors.submit" class="mt-2 text-sm text-red-600">{{ errors.submit }}</p> // Added general submit error display
+    <p v-if="errors.submit" class="mt-2 text-sm text-red-600">{{ errors.submit }}</p>
   </form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'; // Added watch
+import { ref, watch } from 'vue';
 import ImageUploader from './ImageUploader.vue';
 import { createItem, updateItem } from '@/services/itemService';
 import { toast } from 'vue3-toastify';
@@ -102,13 +102,13 @@ const props = defineProps({
   initialData: {
     type: Object,
     default: () => ({
-      _id: null, // Added _id for editing
+      _id: null,
       title: '',
       description: '',
       category: '',
       condition: '',
       location: '',
-      imageUrls: [] // Changed from imageUrl to imageUrls array
+      imageUrls: []
     })
   },
   isEditing: {
@@ -120,14 +120,14 @@ const props = defineProps({
 const emit = defineEmits(['success']);
 
 const formData = ref({ ...props.initialData });
-const imageFile = ref(null); // Added ref to store the selected image file
+const imageFile = ref(null);
 const errors = ref({});
 const isSubmitting = ref(false);
 
 // Watch for changes in initialData to update the form when editing
 watch(() => props.initialData, (newData) => {
   formData.value = { ...newData };
-  imageFile.value = null; // Reset image file when data changes
+  imageFile.value = null;
 }, { deep: true });
 
 const handleImageUpload = (file) => {
@@ -136,7 +136,7 @@ const handleImageUpload = (file) => {
   if (!file) {
     errors.value.image = 'Image is required';
   } else {
-    delete errors.value.image; // Clear error if file is selected
+    delete errors.value.image;
   }
 };
 
@@ -147,13 +147,13 @@ const validateForm = () => {
   if (!formData.value.category) newErrors.category = 'Category is required';
   if (!formData.value.condition) newErrors.condition = 'Condition is required';
   if (!formData.value.location) newErrors.location = 'Location is required';
-  // Validate image only when creating, not necessarily when editing if already exists
-  // if (!props.isEditing && !imageFile.value) { // Temporarily commented out for debugging no-image submission
-      newErrors.image = 'Image is required';
+  // Validate image for new items or when editing without existing images
+  if (!props.isEditing && !imageFile.value) {
+    newErrors.image = 'Image is required';
   }
-  // Allow editing without a new image if one already exists
-  // if (props.isEditing && !imageFile.value && (!formData.value.imageUrls || formData.value.imageUrls.length === 0)) { // Temporarily commented out for debugging no-image submission
-      newErrors.image = 'Image is required when editing if no image exists';
+  // For editing, require image only if no existing images and no new file selected
+  if (props.isEditing && !imageFile.value && (!formData.value.imageUrls || formData.value.imageUrls.length === 0)) {
+    newErrors.image = 'Image is required when editing if no image exists';
   }
 
   errors.value = newErrors;
@@ -167,7 +167,7 @@ const handleSubmit = async () => {
   }
 
   isSubmitting.value = true;
-  errors.value = {}; // Clear previous errors
+  errors.value = {};
 
   // Create FormData to handle file upload
   const data = new FormData();
@@ -185,15 +185,15 @@ const handleSubmit = async () => {
 
   // Append the image file if it exists (for create or update)
   if (imageFile.value) {
-    data.append('images', imageFile.value); // Use 'images' to match backend expectation
+    data.append('images', imageFile.value);
   }
 
   try {
     if (props.isEditing) {
-      await updateItem(formData.value._id, data); // Pass FormData to updateItem
+      await updateItem(formData.value._id, data);
       toast.success('Artículo actualizado correctamente');
     } else {
-      await createItem(data); // Pass FormData to createItem
+      await createItem(data);
       toast.success('Artículo registrado correctamente');
     }
     emit('success');

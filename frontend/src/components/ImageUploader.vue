@@ -109,6 +109,7 @@ type ImagePreview = {
 
 const emit = defineEmits<{
   (e: 'update:modelValue', files: File[]): void
+  (e: 'file-selected', file: File | null): void
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -178,6 +179,8 @@ const processFiles = (files: File[]) => {
           file: file
         })
         emit('update:modelValue', previews.value.map(p => p.file))
+        // Emitir el evento file-selected con el primer archivo para compatibilidad con ItemForm
+        emit('file-selected', previews.value[0]?.file || null)
       }
     }
   })
@@ -186,6 +189,8 @@ const processFiles = (files: File[]) => {
 const removeImage = (index: number) => {
   previews.value.splice(index, 1)
   emit('update:modelValue', previews.value.map(p => p.file))
+  // Emitir el evento file-selected con el primer archivo o null si no hay archivos
+  emit('file-selected', previews.value[0]?.file || null)
 }
 
 const moveLeft = (index: number) => {
@@ -196,6 +201,8 @@ const moveLeft = (index: number) => {
   previews.value[index - 1] = temp
   
   emit('update:modelValue', previews.value.map(p => p.file))
+  // Emitir el evento file-selected con el primer archivo
+  emit('file-selected', previews.value[0]?.file || null)
 }
 
 const moveRight = (index: number) => {
@@ -206,6 +213,8 @@ const moveRight = (index: number) => {
   previews.value[index + 1] = temp
   
   emit('update:modelValue', previews.value.map(p => p.file))
+  // Emitir el evento file-selected con el primer archivo
+  emit('file-selected', previews.value[0]?.file || null)
 }
 
 const simulateUpload = () => {

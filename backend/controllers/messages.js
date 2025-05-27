@@ -66,26 +66,49 @@ exports.getMyMessages = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Obtener conversación con un usuario específico
-// @route   GET /api/v1/messages/conversation/:userId
-// @access  Private
-exports.getConversation = asyncHandler(async (req, res, next) => {
-  const otherUserId = req.params.userId;
+// @desc    Marcar una conversación como leída
+// @route   PUT /api/v1/messages/conversations/:userId/read
+// @access  Privado
+exports.markConversationAsRead = asyncHandler(async (req, res, next) => {
+  const { userId: conversationPartnerId } = req.params;
   const currentUserId = req.user.id;
 
+  // Marcar como leídos todos los mensajes recibidos del conversationPartnerId por el currentUser
+  await Message.updateMany(
+    { sender: conversationPartnerId, recipient: currentUserId, read: false },
+    { $set: { read: true } }
+  );
+
+  res.status(200).json({ success: true, data: {} });
+});
+
+// @desc    Obtener una conversación específica con otro usuario
+// @route   GET /api/v1/messages/conversations/:userId
+// @access  Privado
+exports.getConversation = asyncHandler(async (req, res, next) => {
+  const { userId: conversationPartnerId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Marcar mensajes como leídos al obtener la conversación
+    await Message.updateMany(
+      { sender: conversationPartnerId, recipient: currentUserId, read: false },
+      { $set: { read: true } }
+    );
+
   // Verificar que el otro usuario existe
-  const otherUserDetails = await User.findById(otherUserId).select('name avatar profileImage'); // Asegúrate de seleccionar los campos que necesitas
+  const otherUserDetails = await User.findById(conversationPartnerId).select('name avatar profileImage'); // Asegúrate de seleccionar los campos que necesitas
   if (!otherUserDetails) {
     return next(
-      new ErrorResponse(`Usuario con ID ${otherUserId} no encontrado`, 404)
+      new ErrorResponse(`Usuario con ID ${conversationPartnerId} no encontrado`, 404)
     );
   }
+
 
   // Obtener mensajes entre los dos usuarios
   const messages = await Message.find({
     $or: [
-      { sender: currentUserId, recipient: otherUserId },
-      { sender: otherUserId, recipient: currentUserId }
+      { sender: currentUserId, recipient: conversationPartnerId },
+      { sender: conversationPartnerId, recipient: currentUserId }
     ]
   })
     .populate({
@@ -231,10 +254,19 @@ exports.checkNewMessages = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Obtener todas las conversaciones del usuario actual
+// @desc    Obtener todas las conversaciones del usuario
 // @route   GET /api/v1/messages/conversations
-// @access  Private
+// @access  Privado
 exports.getConversations = asyncHandler(async (req, res, next) => {
+  // Marcar mensajes como leídos al obtener la conversación
+  // Esta es una forma de hacerlo, otra sería tener un endpoint específico para marcar como leído
+  // y llamarlo desde el frontend cuando se abre una conversación.
+  // Por ahora, lo haremos aquí para simplificar.
+  // await Message.updateMany(
+  //   { recipient: req.user.id, read: false },
+  //   { $set: { read: true } }
+  // );
+
   const userId = req.user.id;
 
   const messages = await Message.find({

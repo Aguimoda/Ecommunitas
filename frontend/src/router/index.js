@@ -56,6 +56,12 @@ const routes = [
     component: () => import('../views/MessageDetailView.vue'),
     props: true,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'AdminDashboard',
+    component: () => import('../views/AdminDashboard.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -65,15 +71,19 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated()) {
-      next({ name: 'Login' })
-    } else {
-      next()
-    }
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin);
+  const user = JSON.parse(localStorage.getItem('user')); // Asumimos que el usuario se guarda aquí
+
+  if (requiresAuth && !isAuthenticated()) {
+    next({ name: 'Login' });
+  } else if (requiresAdmin && (!user || user.role !== 'admin')) {
+    // Si requiere admin y el usuario no es admin (o no hay usuario), redirigir
+    // Podrías redirigir a Home o a una página de 'Acceso Denegado'
+    next({ name: 'Home' }); 
   } else {
-    next()
+    next();
   }
-})
+});
 
 export default router

@@ -1,18 +1,28 @@
 <template>
   <div class="profile-view">
     <!-- Sección de información del usuario -->
-    <div class="user-info">
-      <h1>Perfil de Usuario</h1>
-      <div class="avatar">
-        <img :src="user.avatar" alt="Avatar del usuario" />
+    <div class="user-info-container">
+      <div class="user-info">
+        <h1 class="profile-title">Perfil de Usuario</h1>
+        <div class="profile-content">
+          <div class="avatar-container">
+            <div class="avatar">
+              <img :src="user.avatar || '/default-avatar.png'" alt="Avatar del usuario" />
+            </div>
+            <button @click="showProfileEditor = true" class="edit-btn">Editar Perfil</button>
+          </div>
+          <div class="details">
+            <h2 class="user-name">{{ user.name }}</h2>
+            <p class="user-email"><i class="fas fa-envelope"></i> {{ user.email }}</p>
+            <div v-if="user.bio" class="bio-container">
+              <h3 class="section-title">Sobre mí</h3>
+              <p class="user-bio">{{ user.bio }}</p>
+            </div>
+            <p v-if="user.location" class="user-location"><i class="fas fa-map-marker-alt"></i> {{ user.location }}</p>
+            <p class="user-joined"><i class="fas fa-calendar-alt"></i> Miembro desde: {{ user.joinedDate }}</p>
+          </div>
+        </div>
       </div>
-      <div class="details">
-        <h2>{{ user.name }}</h2>
-        <p>{{ user.email }}</p>
-        <p>{{ user.location }}</p>
-        <p>Miembro desde: {{ user.joinedDate }}</p>
-      </div>
-      <button @click="showProfileEditor = true" class="edit-btn" style="border: none; cursor: pointer;">Editar Perfil</button>
     </div>
     
     <!-- Modal del editor de perfil -->
@@ -21,18 +31,22 @@
 
     <!-- Sección de artículos publicados -->
     <div class="user-items">
-      <h2>Mis Artículos</h2>
+      <h2 class="section-title">Mis Artículos</h2>
       <div class="items-grid">
         <div v-for="item in items" :key="item._id" class="item-card">
           <router-link :to="`/items/${item._id}`">
-            <img :src="item.image" :alt="item.title" />
-            <h3>{{ item.title }}</h3>
-            <p>{{ item.price }} €</p>
-            <p>{{ item.location }}</p>
+            <div class="item-image">
+              <img :src="(item.imageUrls && item.imageUrls.length > 0) ? item.imageUrls[0] : '/default-item.png'" :alt="item.title" />
+            </div>
+            <div class="item-details">
+              <h3>{{ item.title }}</h3>
+              <p class="item-price">{{ item.price }} €</p>
+              <p class="item-location"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+            </div>
           </router-link>
           <div class="item-actions">
             <button @click="openEditItemModal(item)" class="edit-btn">Editar</button>
-            <button @click="deleteItem(item._id)">Eliminar</button>
+            <button @click="deleteItem(item._id)" class="delete-btn">Eliminar</button>
           </div>
         </div>
       </div>
@@ -55,6 +69,7 @@ const user = ref({
   name: '',
   email: '',
   avatar: 'https://via.placeholder.com/150', // Default placeholder
+  bio: '',
   location: '',
   joinedDate: '',
   _id: null
@@ -92,6 +107,7 @@ const fetchUserData = async () => {
         name: backendUser.name || user.value.name,
         email: backendUser.email || user.value.email,
         avatar: backendUser.avatar || user.value.avatar || 'https://via.placeholder.com/150',
+        bio: backendUser.bio || user.value.bio,
         location: backendUser.location || user.value.location,
         joinedDate: backendUser.joinedDate || backendUser.createdAt || user.value.joinedDate,
         _id: backendUser._id
@@ -226,7 +242,8 @@ const handleProfileSave = async (updatedProfile) => {
     ...user.value,
     name: updatedProfile.name,
     avatar: updatedProfile.avatarUrl || user.value.avatar,
-    location: updatedProfile.location
+    bio: updatedProfile.bio || user.value.bio,
+    location: updatedProfile.location || user.value.location
   };
   // Recargar los datos del usuario para asegurar que tenemos la información más actualizada
   await fetchUserData();
@@ -242,99 +259,250 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+.user-info-container {
+  margin-bottom: 2rem;
 }
 
 .user-info {
-  background: #fff;
+  background: linear-gradient(to bottom, #ffffff, #f5f5f5);
   padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
+}
+
+.profile-title {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
   text-align: center;
+  font-weight: 600;
+}
+
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .profile-content {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  border: 4px solid white;
 }
 
 .avatar img {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  margin: 0 auto 1rem;
+  transition: transform 0.3s ease;
+}
+
+.avatar:hover img {
+  transform: scale(1.05);
 }
 
 .details {
-  margin-bottom: 1.5rem;
+  flex: 1;
+  min-width: 0;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.user-name {
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.user-email, .user-location, .user-joined {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #555;
+  font-size: 1rem;
+}
+
+.user-email i, .user-location i, .user-joined i {
+  color: #4CAF50;
+  width: 20px;
+}
+
+.bio-container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 0.5rem;
+}
+
+.user-bio {
+  line-height: 1.6;
+  color: #555;
 }
 
 .edit-btn {
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   background-color: #4CAF50;
   color: white;
   text-decoration: none;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  border-radius: 30px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .edit-btn:hover {
   background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.user-items h2 {
-  margin-bottom: 1.5rem;
+.user-items {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
 .item-card {
-  background: #fff;
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #eaeaea;
 }
 
 .item-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
-.item-card img {
-  width: 100%;
+.item-image {
   height: 200px;
+  overflow: hidden;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
-.item-card h3 {
-  padding: 0.5rem 1rem;
-  margin: 0;
+.item-card:hover .item-image img {
+  transform: scale(1.05);
 }
 
-.item-card p {
-  padding: 0 1rem 0.5rem;
-  margin: 0;
-  color: #666;
+.item-details {
+  padding: 1rem;
+}
+
+.item-details h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.item-price {
+  font-weight: bold;
+  color: #4CAF50;
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.item-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #777;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0 0;
+}
+
+.item-location i {
+  color: #4CAF50;
 }
 
 .item-actions {
   padding: 1rem;
   display: flex;
   justify-content: space-between;
+  border-top: 1px solid #eaeaea;
 }
 
-.item-actions button {
-  padding: 0.5rem 1rem;
+.item-actions .edit-btn {
+  background-color: #2196F3;
+}
+
+.item-actions .edit-btn:hover {
+  background-color: #0b7dda;
+}
+
+.item-actions .delete-btn {
   background-color: #f44336;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 30px;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.item-actions button:hover {
+.item-actions .delete-btn:hover {
   background-color: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 </style>

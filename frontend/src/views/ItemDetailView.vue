@@ -121,12 +121,15 @@
           <div class="border-t border-gray-200 mt-6 pt-6 flex flex-col sm:flex-row gap-3">
             <button 
               class="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center"
-              @click="contactOwner"
+              @click="handleMainAction"
             >
-              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-if="!isOwner" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              Contactar
+              <svg v-else class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {{ isOwner ? 'Editar Anuncio' : 'Contactar' }}
             </button>
             <button 
               class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center"
@@ -174,16 +177,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router' // Eliminado useRoute
 // import { useRoute } from 'vue-router' // Se elimina useRoute, se usará defineProps
 import axios from 'axios'
 import MessageForm from '../components/MessageForm.vue'
+import { useAuthStore } from '../store/auth'
 
 const router = useRouter()
 const item = ref(null)
 const loading = ref(true)
 const error = ref('')
+const authStore = useAuthStore()
 
 const props = defineProps({
   id: {
@@ -219,13 +224,26 @@ const fetchItemDetails = async () => {
   }
 }
 
-// Contactar al propietario
+// Contactar al propietario o editar anuncio
 const showContactForm = ref(false)
+
+const isOwner = computed(() => {
+  return authStore.isAuthenticated && item.value && item.value.user && authStore.user && authStore.user._id === item.value.user._id
+})
+
+const handleMainAction = () => {
+  if (isOwner.value) {
+    router.push(`/items/edit/${props.id}`)
+  } else {
+    contactOwner()
+  }
+}
+
 const contactOwner = () => {
-  if (!localStorage.getItem('token')) {
-    // Redirigir a login si no está autenticado
+  if (!authStore.isAuthenticated) {
+    // Redirigir a register si no está autenticado
     router.push({
-      path: '/login',
+      path: '/register',
       query: { redirect: route.fullPath }
     })
     return

@@ -185,8 +185,18 @@ const fetchMessages = async () => {
     otherUser.value = response.otherUser // No || {} needed due to check above
     item.value = response.item
 
-    // Emitir evento de que la conversación ha sido leída
-    window.dispatchEvent(new CustomEvent('conversationRead'));
+    // Marcar la conversación como leída en el backend
+    if (otherUser.value && otherUser.value._id) {
+      try {
+        await messageService.markConversationAsRead(otherUser.value._id);
+        console.log('Conversación marcada como leída en el backend');
+        // Emitir evento de que la conversación ha sido leída para actualizar UI en otros componentes si es necesario
+        window.dispatchEvent(new CustomEvent('conversationRead', { detail: { conversationId: otherUser.value._id } }));
+      } catch (readError) {
+        console.error('Error al marcar la conversación como leída:', readError);
+        toast.error('No se pudo actualizar el estado de lectura de los mensajes.');
+      }
+    }
 
     await nextTick()
     scrollToBottom()

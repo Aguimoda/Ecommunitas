@@ -31,7 +31,7 @@ class MessageService {
    * @returns {Promise} Promesa con los mensajes de la conversación
    */
   async getConversation(userId) {
-    const response = await axios.get(`${API_URL}/messages/conversation/${userId}`, { headers: authHeader() });
+    const response = await axios.get(`${API_URL}/messages/conversations/${userId}`, { headers: authHeader() });
     return response.data;
   }
 
@@ -48,12 +48,22 @@ class MessageService {
   }
 
   /**
-   * Marca un mensaje como leído
+   * Marcar un mensaje como leído
    * @param {string} messageId - ID del mensaje a marcar como leído
-   * @returns {Promise} Promesa con el mensaje actualizado
+   * @returns {Promise} Promesa con el resultado de la operación
    */
   async markAsRead(messageId) {
     const response = await axios.put(`${API_URL}/messages/${messageId}/read`, {}, { headers: authHeader() });
+    return response.data;
+  }
+
+  /**
+   * Marcar una conversación completa como leída
+   * @param {string} conversationPartnerId - ID del usuario con quien se tiene la conversación
+   * @returns {Promise} Promesa con el resultado de la operación
+   */
+  async markConversationAsRead(conversationPartnerId) {
+    const response = await axios.put(`${API_URL}/messages/conversations/${conversationPartnerId}/read`, {}, { headers: authHeader() });
     return response.data;
   }
 

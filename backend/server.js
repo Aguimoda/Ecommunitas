@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Middleware para carga de archivos
-fileUploadMiddleware(app);
+fileUploadMiddleware(app); // Habilitando el middleware de fileUpload
 
 // Configure CSP report logger
 const cspLogger = createLogger({

@@ -148,8 +148,11 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
     }
 
     let newImageUrls = [];
+    let imagesProcessed = false; // Flag to track if image processing occurred
+
     // Manejo de carga de múltiples imágenes si se proporcionan
     if (req.files && req.files.images) {
+      imagesProcessed = true;
       let files = req.files.images;
       // Asegurar que files sea siempre un array
       if (!Array.isArray(files)) {
@@ -201,15 +204,33 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
             // Continuar aunque falle la eliminación de una imagen antigua
           }
         }
-        // Actualizar las URLs en el body de la petición
-        req.body.imageUrls = newImageUrls;
+      }
+      // Actualizar las URLs en el body de la petición para que se guarden en el item
+      req.body.imageUrls = newImageUrls;
+    } else if (req.body.hasOwnProperty('imageUrls')) {
+      // Si se envía 'imageUrls' explícitamente (ej. array vacío para borrar todas las imágenes)
+      imagesProcessed = true;
+      const oldImageUrls = item.imageUrls || [];
+      req.body.imageUrls = Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [];
+      
+      // Eliminar imágenes antiguas que no estén en las nuevas imageUrls
+      if (oldImageUrls.length > 0) {
+        for (const oldUrl of oldImageUrls) {
+          if (!req.body.imageUrls.includes(oldUrl)) {
+            try {
+              await deleteImage(oldUrl);
+            } catch (deleteErr) {
+              console.error('Error deleting old image explicitly:', deleteErr);
+            }
+          }
+        }
       }
     } else {
-      // Si no se suben nuevas imágenes, mantener las existentes
-      delete req.body.imageUrls;
+      // Si no se envían archivos ni se especifica `imageUrls` en el body, no modificar `imageUrls` existentes.
+      delete req.body.imageUrls; 
     }
 
-    // Actualizar el ítem
+    // Actualizar el ítem con los datos del body (incluyendo imageUrls si se procesaron)
     Object.assign(item, req.body);
     await item.save();
 
@@ -219,7 +240,7 @@ exports.updateItem = asyncHandler(async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error updating item:', error);
-    // Si hubo un error y se subieron nuevas imágenes, eliminarlas
+    // Si hubo un error y se subieron nuevas imágenes (newImageUrls tiene contenido), eliminarlas
     if (newImageUrls && newImageUrls.length > 0) {
       for (const url of newImageUrls) {
         try {
