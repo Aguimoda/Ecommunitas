@@ -1,0 +1,48 @@
+/* Estilos específicos para SearchView */
+@import './common.css';
+
+/* Contenedor principal usando clase común */
+.search {
+  @apply main-container;
+}
+
+/* Sección de resultados */
+.results {
+  margin-top: 2rem;
+}
+
+/* Tarjetas de elementos usando clase común */
+.item {
+  @apply item-card;
+}
+
+/* Utilidades de truncado de texto usando clases comunes */
+.line-clamp-1 {
+  @apply text-truncate-1;
+}
+
+.line-clamp-2 {
+  @apply text-truncate-2;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .item {
+    border-color: #374151;
+  }
+  
+  .item:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search {
+    padding: 1rem;
+  }
+  
+  .results {
+    margin-top: 1rem;
+  }
+}

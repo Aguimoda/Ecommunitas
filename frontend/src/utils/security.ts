@@ -1,43 +1,75 @@
-import Headers  from 'axios'
+/**
+ * @fileoverview Utilidades de seguridad para la aplicación
+ * @description Proporciona funciones para configurar políticas de seguridad, sanitización de datos,
+ * manejo de sesiones y protección contra vulnerabilidades comunes como XSS y CSRF
+ */
+
 import { ref } from 'vue'
+import DOMPurify from 'dompurify'
 import { useToast } from 'vue-toastification'
 
+/**
+ * Configuración de directivas CSP (Content Security Policy)
+ * @description Define las políticas de seguridad de contenido para la aplicación
+ */
 type CSPDirectives = {
-  defaultSrc?: string[]
-  scriptSrc?: string[]
-  styleSrc?: string[]
-  imgSrc?: string[]
-  connectSrc?: string[]
-  fontSrc?: string[]
-  objectSrc?: string[]
-  mediaSrc?: string[]
-  frameSrc?: string[]
+  'default-src'?: string[]
+  'script-src'?: string[]
+  'style-src'?: string[]
+  'img-src'?: string[]
+  'connect-src'?: string[]
+  'font-src'?: string[]
+  'object-src'?: string[]
+  'media-src'?: string[]
+  'frame-src'?: string[]
+  'worker-src'?: string[]
+  'child-src'?: string[]
+  'form-action'?: string[]
+  'frame-ancestors'?: string[]
+  'plugin-types'?: string[]
+  'base-uri'?: string[]
+  'report-uri'?: string[]
+  'report-to'?: string[]
+  'require-trusted-types-for'?: string[]
+  'trusted-types'?: string[]
+  'upgrade-insecure-requests'?: boolean
+  'block-all-mixed-content'?: boolean
+  /** Alias para report-uri en formato camelCase */
   reportUri?: string
-  reportTo?: string
-  workerSrc?: string[]
-  manifestSrc?: string[]
-  prefetchSrc?: string[]
-  navigateTo?: string[]
-  formAction?: string[]
-  sandbox?: string[]
-  upgradeInsecureRequests?: boolean
-  blockAllMixedContent?: boolean
 }
 
+/**
+ * Configuración general de seguridad de la aplicación
+ * @description Opciones para configurar diferentes aspectos de seguridad
+ */
 type SecurityConfig = {
-  csp?: string | CSPDirectives
+  /** Políticas de seguridad de contenido */
+  csp?: CSPDirectives | string
+  /** Habilitar HTTP Strict Transport Security */
+  hsts?: boolean
+  /** Habilitar protección X-Content-Type-Options */
+  nosniff?: boolean
+  /** Habilitar protección XSS */
   xssProtection?: boolean
-  secureCookies?: boolean
-  csrfToken?: string
-  cspNonce?: string
+  /** Configuración de X-Frame-Options */
+  frameOptions?: 'DENY' | 'SAMEORIGIN' | string
+  /** Habilitar modo de solo reporte para CSP */
   cspReportOnly?: boolean
+  /** Nonce para CSP */
+  cspNonce?: string
+  /** Habilitar cookies seguras */
+  secureCookies?: boolean
+  /** Token CSRF */
+  csrfToken?: string
 }
 
-const toast = useToast()
+// Estado reactivo de seguridad
 const securityEnabled = ref(true)
 
 /**
  * Configura las políticas de seguridad para la aplicación
+ * @param {SecurityConfig} config - Configuración de seguridad a aplicar
+ * @description Establece CSP, protección XSS y otras medidas de seguridad en el DOM
  */
 export function configureSecurity(config: SecurityConfig) {
   // Configurar CSP
@@ -79,10 +111,10 @@ export function configureSecurity(config: SecurityConfig) {
 
   // Configurar protección XSS
   if (config.xssProtection !== false) {
-    const meta = document.createElement('meta')
-    meta.httpEquiv = 'X-XSS-Protection'
-    meta.content = '1; mode=block'
-    document.head.appendChild(meta)
+    const xssProtectionMeta = document.createElement('meta')
+    xssProtectionMeta.httpEquiv = 'X-XSS-Protection'
+    xssProtectionMeta.content = '1; mode=block'
+    document.head.appendChild(xssProtectionMeta)
   }
 
   // Configurar cookies seguras
@@ -114,89 +146,102 @@ export function configureSecurity(config: SecurityConfig) {
 }
 
 /**
- * Sanitiza entradas de usuario para prevenir XSS
+ * Sanitiza una cadena de texto eliminando contenido potencialmente peligroso
+ * @param {string} input - Texto a sanitizar
+ * @returns {string} Texto sanitizado y seguro
+ * @description Utiliza DOMPurify para eliminar scripts y contenido malicioso
  */
 export function sanitizeInput(input: string): string {
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
+  if (!input || typeof input !== 'string') {
+    return ''
+  }
+  
+  // Usar DOMPurify para limpiar el input
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: []
+  })
 }
 
 /**
- * Valida y limpia datos de formulario
+ * Sanitiza recursivamente todos los campos de texto en un objeto de datos
+ * @param {Record<string, any>} data - Objeto con datos a sanitizar
+ * @returns {Record<string, any>} Objeto con datos sanitizados
+ * @description Aplica sanitización a strings, arrays y objetos anidados
  */
 export function sanitizeFormData(data: Record<string, any>): Record<string, any> {
-  return Object.entries(data).reduce((acc, [key, value]) => {
-    if (typeof value === 'string') {
-      acc[key] = sanitizeInput(value)
-    } else if (Array.isArray(value)) {
-      acc[key] = value.map(item => 
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? sanitizeInput(value) : 
+      Array.isArray(value) ? value.map(item => 
         typeof item === 'string' ? sanitizeInput(item) : item
-      )
-    } else if (value && typeof value === 'object') {
-      acc[key] = sanitizeFormData(value)
-    } else {
-      acc[key] = value
-    }
-    return acc
-  }, {} as Record<string, any>)
+      ) : 
+      value && typeof value === 'object' ? sanitizeFormData(value) : value
+    ])
+  )
 }
 
 /**
- * Configura headers de seguridad para axios
+ * Genera headers de seguridad estándar para peticiones HTTP
+ * @returns {Headers} Headers configurados con políticas de seguridad
+ * @description Incluye protecciones XSS, CSRF, frame options y más
  */
 export function getSecureHeaders(): Headers {
   const headers: Record<string, string> = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), clipboard-write=(), gamepad=(), speaker-selection=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), interest-cohort=(), serial=(), sync-script=(), trust-token-redemption=(), unload=(), vertical-scroll=()',
-    'Cross-Origin-Embedder-Policy': 'require-corp',
-    'Cross-Origin-Opener-Policy': 'same-origin',
-    'Cross-Origin-Resource-Policy': 'same-origin',
-    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-    'Document-Policy': 'document-write=(), oversized-images=2.0, unsized-media=()',
-    'Origin-Agent-Cluster': '?1',
-    'Cache-Control': 'no-store',
-    'Clear-Site-Data': '"cache", "cookies", "storage", "executionContexts"',
-    'Expect-CT': 'max-age=86400, enforce'
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
   }
-
+  
+  if (securityEnabled.value) {
+    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+  }
+  
+  // Agregar token CSRF si está disponible
   const csrfToken = localStorage.getItem('csrfToken')
   if (csrfToken) {
     headers['X-CSRF-Token'] = csrfToken
   }
-
-  return headers
+  
+  return new Headers(headers)
 }
 
 /**
- * Genera un token CSRF seguro
+ * Genera un token CSRF criptográficamente seguro
+ * @returns {string} Token CSRF único
+ * @description Utiliza crypto.getRandomValues para generar tokens seguros
  */
 export function generateCSRFToken(): string {
   const array = new Uint32Array(10)
-  window.crypto.getRandomValues(array)
-  return Array.from(array, dec => dec.toString(16).padStart(2, '0')).join('')
+  crypto.getRandomValues(array)
+  return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('')
 }
 
 /**
- * Habilita/deshabilita las funciones de seguridad
+ * Habilita o deshabilita las medidas de seguridad globalmente
+ * @param {boolean} enabled - Si las medidas de seguridad deben estar activas
+ * @description Útil para desarrollo, pero debe estar habilitado en producción
  */
 export function toggleSecurity(enabled: boolean) {
   securityEnabled.value = enabled
   
   if (enabled) {
     setupSessionManagement()
-    toast.success('Seguridad activada')
+    // toast.success('Seguridad activada')
   } else {
     cleanupSessionManagement()
-    toast.warning('Seguridad desactivada')
+    // toast.warning('Seguridad desactivada')
+    console.warn('⚠️ Seguridad deshabilitada - Solo para desarrollo')
   }
 }
 
+/**
+ * Verifica si las medidas de seguridad están habilitadas
+ * @returns {boolean} Estado actual de la seguridad
+ */
 export function isSecurityEnabled() {
   return securityEnabled.value
 }
@@ -258,7 +303,7 @@ export function createSecurityMiddleware(options: {
   authRequired?: boolean
   csrfProtected?: boolean
 }) {
-  return (to: any, from: any, next: any) => {
+  return (to: any, _from: any, next: any) => {
     // Check if security is enabled
     if (!isSecurityEnabled()) {
       return next()
@@ -266,13 +311,14 @@ export function createSecurityMiddleware(options: {
 
     // Auth protection
     if (options.authRequired && !isAuthenticated()) {
-      return next({ name: 'login', query: { redirect: to.fullPath } })
+      return next({ name: 'LoginView', query: { redirect: to.fullPath } })
     }
 
     // CSRF protection for sensitive routes
     if (options.csrfProtected) {
       const csrfToken = localStorage.getItem('csrfToken')
       if (!csrfToken || csrfToken !== to.meta.csrfToken) {
+        const toast = useToast()
         toast.error('Invalid CSRF token')
         return next(false)
       }

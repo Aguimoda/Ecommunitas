@@ -1,7 +1,12 @@
-import { z } from 'zod'
-import { useToast } from 'vue-toastification'
+/**
+ * @file validators.ts
+ * @description Validadores de formularios usando Zod
+ */
 
-const toast = useToast()
+import { z } from 'zod'
+import { displayError } from '@/shared/utils/errorHandler'
+
+// const toast = useToast()
 
 // Expresión regular para validar ubicaciones (ciudad, país)
 const LOCATION_REGEX = /^[\w\sáéíóúÁÉÍÓÚñÑ-]+,\s*[\w\sáéíóúÁÉÍÓÚñÑ-]+$/
@@ -28,18 +33,32 @@ export const itemSchema = z.object({
     .trim()
 })
 
+/**
+ * Valida los datos de un formulario de artículo usando el esquema definido
+ * @param {unknown} formData - Datos del formulario a validar
+ * @returns {object} Datos validados y tipados
+ * @throws {z.ZodError} Error de validación con detalles específicos
+ * @description Muestra automáticamente el primer error encontrado al usuario
+ */
 export function validateItemForm(formData: unknown) {
   try {
     return itemSchema.parse(formData)
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0]
-      toast.error(firstError.message)
+      displayError(firstError.message)
     }
     throw error
   }
 }
 
+/**
+ * Crea un validador en tiempo real para cualquier esquema Zod
+ * @template T - Tipo del esquema Zod
+ * @param {T} schema - Esquema de validación Zod
+ * @returns {Function} Función validadora que retorna estado y mensaje
+ * @description Útil para validación en tiempo real en formularios
+ */
 export function createLiveValidator<T extends z.ZodTypeAny>(schema: T) {
   return (value: unknown) => {
     try {
@@ -56,6 +75,11 @@ export function createLiveValidator<T extends z.ZodTypeAny>(schema: T) {
 
 // Validadores individuales para uso en tiempo real
 
+/** Validador en tiempo real para el título del artículo */
 export const titleValidator = createLiveValidator(itemSchema.shape.title)
+
+/** Validador en tiempo real para la descripción del artículo */
 export const descriptionValidator = createLiveValidator(itemSchema.shape.description)
+
+/** Validador en tiempo real para la ubicación del artículo */
 export const locationValidator = createLiveValidator(itemSchema.shape.location)

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ref } from 'vue'
-import { useToast } from 'vue-toastification'
+import { displayError } from '@/shared/utils/errorHandler'
 
 type RateLimitConfig = {
   maxRequests: number
@@ -15,7 +15,7 @@ type QueuedRequest = {
   reject: (reason?: any) => void
 }
 
-const toast = useToast()
+// const toast = useToast()
 const isRateLimited = ref(false)
 const retryAfter = ref(0)
 const queue: QueuedRequest[] = []
@@ -55,7 +55,7 @@ const rateLimiter = (config: RateLimitConfig) => {
           
           if (onRateLimited) onRateLimited()
           
-          toast.error(`Demasiadas solicitudes. Intenta nuevamente en ${waitTime} segundos`)
+          displayError(`Demasiadas solicitudes. Intenta nuevamente en ${waitTime} segundos`)
           
           setTimeout(() => {
             isRateLimited.value = false

@@ -94,16 +94,16 @@ app.post('/csp-report', cspRateLimiter, (req, res) => {
   }
 });
 
-// Importar rutas
+// Route files
 const auth = require('./routes/auth');
 const users = require('./routes/users');
-const items = require('./routes/items');
+const items = require('./routes/items'); // Controlador principal de items
 const messages = require('./routes/messages');
 
-// Montar rutas
+// Mount routers
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/users', users);
-app.use('/api/v1/items', items);
+app.use('/api/v1/items', items); // Ahora apunta al controlador unificado
 app.use('/api/v1/messages', messages);
 
 // Middleware para manejo de errores

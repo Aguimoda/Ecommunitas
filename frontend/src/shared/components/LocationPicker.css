@@ -1,0 +1,249 @@
+/*
+ * LocationPicker Component Styles
+ * Estilos del Componente LocationPicker
+ * 
+ * This file contains all the styling for the LocationPicker component,
+ * including map, search, and location selection functionality.
+ * 
+ * Este archivo contiene todos los estilos para el componente LocationPicker,
+ * incluyendo mapa, búsqueda y funcionalidad de selección de ubicación.
+ */
+
+/* Main Container / Contenedor Principal */
+.location-picker {
+  @apply bg-white border border-gray-300 rounded-lg p-4 space-y-4;
+}
+
+/* Search Section / Sección de Búsqueda */
+.search-section {
+  @apply space-y-2;
+}
+
+.search-container {
+  @apply flex gap-2;
+}
+
+.search-input {
+  @apply flex-1 px-3 py-2 border border-gray-300 rounded-md 
+         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+         transition-colors duration-200;
+}
+
+.my-location-btn {
+  @apply px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700
+         focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
+         transition-colors duration-200 flex items-center gap-2 whitespace-nowrap
+         disabled:opacity-50 disabled:cursor-not-allowed;
+  min-width: 120px;
+}
+
+.my-location-btn:disabled {
+  @apply bg-green-400 cursor-not-allowed;
+}
+
+/* Loading Spinner / Spinner de Carga */
+.spinner {
+  @apply inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+/* Search Results / Resultados de Búsqueda */
+.search-results {
+  @apply max-h-40 overflow-y-auto border border-gray-200 rounded-md bg-white;
+}
+
+.search-result-item {
+  @apply px-3 py-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0
+         transition-colors duration-150;
+}
+
+.search-result-item:hover {
+  @apply bg-blue-50;
+}
+
+.search-result-item:active {
+  @apply bg-blue-100;
+}
+
+/* Map Container / Contenedor del Mapa */
+.map-container {
+  @apply relative;
+}
+
+.map {
+  @apply w-full rounded-md overflow-hidden border border-gray-300;
+  height: 300px;
+}
+
+.map-loading {
+  @apply flex items-center justify-center bg-gray-100 text-gray-500;
+  height: 300px;
+}
+
+/* Selected Location Display / Visualización de Ubicación Seleccionada */
+.selected-location {
+  @apply bg-gray-50 border border-gray-200 rounded-md p-3;
+}
+
+.selected-location h4 {
+  @apply font-medium text-gray-900 mb-1;
+}
+
+.selected-address {
+  @apply text-sm text-gray-600 mb-2;
+}
+
+.selected-coordinates {
+  @apply text-xs text-gray-500 font-mono;
+}
+
+/* Action Buttons / Botones de Acción */
+.action-buttons {
+  @apply flex gap-2 justify-end;
+}
+
+.confirm-btn {
+  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700
+         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+         transition-colors duration-200;
+}
+
+.clear-btn {
+  @apply px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700
+         focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
+         transition-colors duration-200;
+}
+
+/* Error States / Estados de Error */
+.error-message {
+  @apply text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2;
+}
+
+.error-message::before {
+  content: "⚠ ";
+  @apply text-red-500;
+}
+
+/* Success States / Estados de Éxito */
+.success-message {
+  @apply text-sm text-green-600 bg-green-50 border border-green-200 rounded-md p-2;
+}
+
+.success-message::before {
+  content: "✓ ";
+  @apply text-green-500;
+}
+
+/* Responsive Design / Diseño Responsivo */
+@media (max-width: 640px) {
+  .location-picker {
+    @apply p-3;
+  }
+  
+  .search-container {
+    @apply flex-col gap-2;
+  }
+  
+  .my-location-btn {
+    @apply w-full justify-center;
+  }
+  
+  .action-buttons {
+    @apply flex-col;
+  }
+  
+  .confirm-btn,
+  .clear-btn {
+    @apply w-full justify-center;
+  }
+  
+  .map {
+    height: 250px;
+  }
+}
+
+/* Dark Mode Support / Soporte para Modo Oscuro */
+@media (prefers-color-scheme: dark) {
+  .location-picker {
+    @apply bg-gray-800 border-gray-600;
+  }
+  
+  .search-input {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+  
+  .search-input:focus {
+    @apply border-blue-400 ring-blue-400;
+  }
+  
+  .search-results {
+    @apply bg-gray-800 border-gray-600;
+  }
+  
+  .search-result-item {
+    @apply text-white border-gray-600;
+  }
+  
+  .search-result-item:hover {
+    @apply bg-gray-700;
+  }
+  
+  .selected-location {
+    @apply bg-gray-700 border-gray-600;
+  }
+  
+  .selected-location h4 {
+    @apply text-white;
+  }
+  
+  .selected-address {
+    @apply text-gray-300;
+  }
+  
+  .selected-coordinates {
+    @apply text-gray-400;
+  }
+  
+  .map-loading {
+    @apply bg-gray-700 text-gray-300;
+  }
+}
+
+/* Animations / Animaciones */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* High Contrast Mode / Modo de Alto Contraste */
+@media (prefers-contrast: high) {
+  .search-input,
+  .location-picker {
+    @apply border-2 border-black;
+  }
+  
+  .confirm-btn,
+  .clear-btn,
+  .my-location-btn {
+    @apply border-2 border-black;
+  }
+}

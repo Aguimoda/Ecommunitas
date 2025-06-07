@@ -1,0 +1,115 @@
+/* ItemDetailView.vue - Estilos personalizados */
+@import './common.css';
+
+/* Animaciones para la galería de imágenes */
+.image-gallery {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Efectos hover para botones de navegación */
+.nav-button {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.nav-button:hover {
+  transform: scale(1.1);
+  backdrop-filter: blur(8px);
+}
+
+/* Animación para indicadores de imagen */
+.image-indicator {
+  transition: all 0.2s ease;
+}
+
+.image-indicator:hover {
+  transform: scale(1.2);
+}
+
+/* Estilos para miniaturas */
+.thumbnail {
+  transition: all 0.2s ease;
+}
+
+.thumbnail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Animación para botones de acción */
+.action-button {
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para el modal */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Estilos para el spinner de carga */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .thumbnail {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .nav-button {
+    padding: 0.5rem;
+  }
+  
+  .image-indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}
