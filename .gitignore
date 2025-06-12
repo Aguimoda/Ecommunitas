@@ -1,53 +1,211 @@
-# Root ignores
+#
+# @fileoverview Configuración de Git ignore para el proyecto Ecommunitas
+# 
+# Este archivo especifica qué archivos y directorios deben ser ignorados por Git
+# en todo el proyecto (frontend y backend). Incluye patrones para archivos
+# temporales, dependencias, builds, logs y archivos sensibles.
+# 
+# @description Categorías de archivos ignorados:
+# - **Archivos del sistema**: .DS_Store, Thumbs.db, etc.
+# - **Logs y debugging**: Archivos de log de npm, yarn y aplicación
+# - **Variables de entorno**: Archivos .env (excepto .env.example)
+# - **IDEs**: Configuraciones de editores y IDEs
+# - **Dependencias**: node_modules y paquetes de gestores
+# - **Builds**: Archivos compilados y distribuciones
+# - **Testing**: Reportes de cobertura y archivos temporales
+# - **Uploads**: Archivos subidos por usuarios
+# - **Certificados**: Archivos SSL y claves privadas
+# 
+# @architecture
+# ```
+# .gitignore
+# ├── Archivos del sistema (OS)
+# ├── Logs y debugging
+# ├── Variables de entorno
+# ├── Configuraciones IDE
+# ├── Dependencias (node_modules)
+# ├── Builds y distribuciones
+# ├── Testing y coverage
+# ├── Uploads de usuarios
+# └── Certificados y claves
+# ```
+# 
+# @security
+# - Protege archivos .env con credenciales
+# - Excluye certificados SSL y claves privadas
+# - Ignora archivos de configuración sensibles
+# - Previene commit accidental de tokens
+# 
+# @performance
+# - Excluye node_modules (reduce tamaño del repo)
+# - Ignora builds (se generan automáticamente)
+# - Omite logs y archivos temporales
+# - Reduce tiempo de clonado y sincronización
+# 
+# @author Equipo Ecommunitas
+# @version 1.0.0
+# @since 2024
+#
+
+# ============================================================================
+# ARCHIVOS DEL SISTEMA OPERATIVO
+# ============================================================================
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ============================================================================
+# LOGS Y ARCHIVOS DE DEBUGGING
+# ============================================================================
+
+# Logs generales
 *.log
+logs/
+**/*.log
+**/logs/
+
+# Logs específicos de gestores de paquetes
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================================
+# GESTORES DE PAQUETES Y DEPENDENCIAS
+# ============================================================================
+
+# Lock files (se regeneran automáticamente)
 package-lock.json
 yarn.lock
-.env
-.env.*
-!.env.example
+pnpm-lock.yaml
 
-# IDE
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Dependency directories (handles all levels)
+# Directorios de dependencias
 **/node_modules/
 **/jspm_packages/
 
-# Build artifacts (handles all levels)
-**/dist/
-**/build/
-**/out/
-**/.cache/
-**/.temp/
+# ============================================================================
+# VARIABLES DE ENTORNO Y CONFIGURACIÓN SENSIBLE
+# ============================================================================
 
-# Coverage reports
-**/coverage/
-**/*.lcov
-
-# Logs
-**/logs/
-**/*.log
-
-# Environment files (all levels)
+# Archivos de entorno (contienen credenciales)
+.env
+.env.*
 **/.env
 **/.env.local
 **/.env.development
 **/.env.test
 **/.env.production
 
-# System files
-ehthumbs.db
+# Excepción: mantener archivos de ejemplo
+!.env.example
+!**/.env.example
+
+# ============================================================================
+# CONFIGURACIONES DE IDEs Y EDITORES
+# ============================================================================
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+
+# Visual Studio
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# BUILDS Y DISTRIBUCIONES
+# ============================================================================
+
+# Directorios de build
+**/dist/
+**/build/
+**/out/
+**/.cache/
+**/.temp/
+**/.tmp/
+**/public/dist/
+
+# Archivos compilados
+*.tsbuildinfo
+*.js.map
+*.css.map
+
+# Archivos generados por Vite/Webpack
+**/.vite/
+**/stats.html
+**/stats.json
+**/manifest.json
+
+# Archivos temporales de desarrollo
+**/.hot/
+**/.webpack/
+**/node_modules/.cache/
+
+# ============================================================================
+# TESTING Y COVERAGE
+# ============================================================================
+
+# Reportes de cobertura
+**/coverage/
+**/*.lcov
+**/.nyc_output/
+
+# Archivos de test temporales
+**/.jest/
+**/test-results/
+
+# Reportes de Jest
+**/jest_html_reporters.html
+**/jest-html-reporters-attach/
+
+# Directorio de reportes
+reports/
+
+# Archivos de Playwright
+**/playwright-report/
+**/playwright/.cache/
+**/test-results/
+
+# Archivos de Vitest
+**/__vitest__/
+**/vitest-coverage/
+
+# ============================================================================
+# UPLOADS Y ARCHIVOS DE USUARIO
+# ============================================================================
+
+# Uploads del backend (archivos subidos por usuarios)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Archivos temporales de upload
+**/tmp-*
+**/temp-*
 [Tt]humbs.db
 
 # Editor directories and files
