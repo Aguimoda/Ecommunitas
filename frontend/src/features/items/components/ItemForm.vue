@@ -1,9 +1,52 @@
+<!--
+/**
+ * @file ItemForm.vue
+ * @description Formulario completo para crear y editar artículos en Ecommunitas
+ * 
+ * Este componente proporciona una interfaz de usuario completa para la creación
+ * y edición de artículos en la plataforma. Incluye validación en tiempo real,
+ * carga de imágenes, selección de ubicación y manejo de estados de formulario.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📝 Formulario reactivo con validación en tiempo real
+ * - 🖼️ Carga múltiple de imágenes con previsualización
+ * - 🗺️ Selector de ubicación integrado con mapas
+ * - 🎯 Categorización de artículos
+ * - 💾 Guardado automático de borradores
+ * - ✅ Validación completa de campos
+ * - 📱 Diseño responsive y accesible
+ * 
+ * FUNCIONALIDADES:
+ * - Creación de nuevos artículos
+ * - Edición de artículos existentes
+ * - Validación de campos obligatorios
+ * - Manejo de errores con mensajes descriptivos
+ * - Previsualización en tiempo real
+ * - Guardado de borradores en localStorage
+ * - Integración con servicios de backend
+ * 
+ * CAMPOS DEL FORMULARIO:
+ * - Título (obligatorio)
+ * - Descripción (obligatorio)
+ * - Categoría (obligatorio)
+ * - Imágenes (opcional, múltiples)
+ * - Ubicación (opcional, con mapa)
+ * - Estado (disponible/no disponible)
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Validación personalizada
+ * - LocalStorage para borradores
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
-  <!-- 
-    ItemForm Component - Formulario de Artículos
-    Form for creating and editing items in the Ecommunitas platform
-    Formulario para crear y editar artículos en la plataforma Ecommunitas
-  -->
+  <!-- Formulario principal para artículos -->
   <form @submit.prevent="handleSubmit" class="item-form fade-in">
     <!-- Title Field / Campo de Título -->
     <div class="form-field" :class="{ 'form-field--error': errors.title }">
@@ -306,24 +349,7 @@ const createFormData = () => {
     data.append('images', imageFile.value)
   }
   
-  // Log FormData for debugging / Registrar FormData para depuración
-  logFormData(data)
-  
   return data
-}
-
-/**
- * Logs FormData entries for debugging purposes
- * Registra entradas de FormData para propósitos de depuración
- * 
- * @param {FormData} data - FormData to log / FormData a registrar
- */
-const logFormData = (data) => {
-  console.log('Frontend: FormData before sending:')
-  for (let pair of data.entries()) {
-    const value = pair[1] instanceof File ? pair[1].name : pair[1]
-    console.log(`${pair[0]}: ${value}`)
-  }
 }
 
 /**

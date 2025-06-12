@@ -1,7 +1,74 @@
 /**
- * Error Handler Utility
- * Centralized error handling and display logic
- * Provides consistent error processing across the application
+ * @file errorHandler.ts
+ * @description Utilidad centralizada para manejo y visualización de errores en Ecommunitas
+ * @module Shared/Utils/ErrorHandler
+ * @version 1.0.0
+ * @author Equipo de Desarrollo Ecommunitas
+ * @created 2024
+ * 
+ * Este módulo proporciona funcionalidades críticas para:
+ * - Manejo centralizado de errores de la aplicación
+ * - Procesamiento consistente de errores HTTP y de red
+ * - Visualización de errores mediante notificaciones toast
+ * - Clasificación automática de tipos de error
+ * - Logging estructurado de errores para debugging
+ * - Traducción de mensajes de error técnicos a mensajes amigables
+ * - Integración con el sistema de notificaciones global
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * ================================
+ * 
+ * 🔍 CLASIFICACIÓN DE ERRORES:
+ * - Errores de red y conectividad
+ * - Errores de validación de formularios
+ * - Errores de autenticación y autorización
+ * - Errores del servidor (4xx, 5xx)
+ * - Errores de timeout y rate limiting
+ * - Errores desconocidos con fallback seguro
+ * 
+ * 📱 VISUALIZACIÓN INTELIGENTE:
+ * - Notificaciones toast con diferentes niveles de severidad
+ * - Mensajes contextuales según el tipo de error
+ * - Opciones de personalización para diferentes escenarios
+ * - Prevención de spam de notificaciones duplicadas
+ * 
+ * 🛠️ HERRAMIENTAS DE DEBUGGING:
+ * - Logging detallado con información contextual
+ * - Preservación de stack traces originales
+ * - Información de request/response para errores HTTP
+ * - Timestamps y metadata para análisis posterior
+ * 
+ * 🔒 SEGURIDAD:
+ * - Sanitización de información sensible en logs
+ * - Mensajes de error seguros para usuarios finales
+ * - Prevención de exposición de detalles internos
+ * 
+ * @example
+ * ```typescript
+ * import { displayError, handleApiError } from '@/shared/utils/errorHandler'
+ * 
+ * // Manejo básico de errores
+ * try {
+ *   await apiCall()
+ * } catch (error) {
+ *   displayError(error, {
+ *     showToast: true,
+ *     customMessage: 'Error al procesar la solicitud'
+ *   })
+ * }
+ * 
+ * // Manejo específico de errores de API
+ * const handleSubmit = async () => {
+ *   try {
+ *     await submitForm()
+ *   } catch (error) {
+ *     const errorResponse = handleApiError(error)
+ *     if (errorResponse.code === 'VALIDATION_ERROR') {
+ *       // Manejar errores de validación específicamente
+ *     }
+ *   }
+ * }
+ * ```
  */
 
 import { useNotifications } from '../composables/useNotifications'
@@ -43,7 +110,7 @@ export interface ApiError {
  * @returns Error response object
  */
 export function displayError(
-  error: any,
+  error: unknown,
   options: {
     showToast?: boolean
     logError?: boolean
@@ -72,11 +139,11 @@ export function displayError(
  * @param customMessage - Optional custom message override
  * @returns Standardized error response
  */
-export function processError(error: any, customMessage?: string): ErrorResponse {
+export function processError(error: unknown, customMessage?: string): ErrorResponse {
   let message = customMessage || 'Error desconocido'
   let code: ErrorCode = 'UNKNOWN'
   let statusCode: number | undefined
-  let details: any
+  let details: unknown
   
   if (isAxiosError(error)) {
     statusCode = error.response?.status
@@ -148,7 +215,7 @@ export function processError(error: any, customMessage?: string): ErrorResponse 
   } else if (error && typeof error === 'object') {
     // Object with message property
     code = 'CLIENT_ERROR'
-    message = error.message || JSON.stringify(error)
+    message = (error as any).message || JSON.stringify(error)
     details = error
   }
   
@@ -165,8 +232,8 @@ export function processError(error: any, customMessage?: string): ErrorResponse 
  * @param error - Error to check
  * @returns True if error is AxiosError
  */
-export function isAxiosError(error: any): error is AxiosError {
-  return error && error.isAxiosError === true
+export function isAxiosError(error: unknown): error is AxiosError {
+  return !!(error && typeof error === 'object' && (error as any).isAxiosError === true)
 }
 
 /**
@@ -174,7 +241,7 @@ export function isAxiosError(error: any): error is AxiosError {
  * @param error - Validation error
  * @returns Formatted validation error message
  */
-export function handleValidationError(error: any): string {
+export function handleValidationError(error: unknown): string {
   if (isAxiosError(error) && error.response?.status === 400) {
     const apiError = error.response.data as ApiError
     if (apiError?.errors?.length) {
@@ -190,7 +257,7 @@ export function handleValidationError(error: any): string {
  * @param error - Auth error
  * @param redirectToLogin - Whether to redirect to login
  */
-export function handleAuthError(error: any, redirectToLogin = false): void {
+export function handleAuthError(error: unknown, redirectToLogin = false): void {
   const { notifyAuthError } = useNotifications()
   
   if (isAxiosError(error) && error.response?.status === 401) {
@@ -215,7 +282,7 @@ export function handleAuthError(error: any, redirectToLogin = false): void {
  * @param context - Additional context
  * @returns User-friendly message
  */
-export function createUserFriendlyMessage(error: any, context?: string): string {
+export function createUserFriendlyMessage(error: unknown, context?: string): string {
   const errorResponse = processError(error)
   
   const contextPrefix = context ? `${context}: ` : ''
@@ -247,7 +314,7 @@ export function createUserFriendlyMessage(error: any, context?: string): string 
  * @param level - Log level
  */
 export function logError(
-  error: any,
+  error: unknown,
   context?: string,
   level: 'error' | 'warn' | 'info' = 'error'
 ): void {

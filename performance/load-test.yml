@@ -1,0 +1,175 @@
+# Configuración de pruebas de carga para Ecommunitas
+# Este archivo define escenarios de prueba de rendimiento usando Artillery
+
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Fase de calentamiento
+    - duration: 60
+      arrivalRate: 5
+      name: "Calentamiento"
+    # Fase de carga normal
+    - duration: 300
+      arrivalRate: 20
+      name: "Carga normal"
+    # Fase de pico de carga
+    - duration: 120
+      arrivalRate: 50
+      name: "Pico de carga"
+    # Fase de enfriamiento
+    - duration: 60
+      arrivalRate: 10
+      name: "Enfriamiento"
+  
+  # Configuración de métricas y umbrales
+  ensure:
+    # Tiempo de respuesta promedio debe ser menor a 500ms
+    - p95: 500
+    # Tiempo de respuesta máximo debe ser menor a 2000ms
+    - max: 2000
+    # Tasa de error debe ser menor al 1%
+    - errorRate: 1
+  
+  # Variables de entorno
+  variables:
+    apiUrl: "http://localhost:5000/api/v1"
+  
+  # Configuración de plugins
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    publish-metrics:
+      - type: json
+        path: "./performance/reports/load-test-results.json"
+
+# Escenarios de prueba
+scenarios:
+  # Escenario 1: Navegación básica
+  - name: "Navegación básica"
+    weight: 40
+    flow:
+      - get:
+          url: "/"
+          name: "Página principal"
+      - think: 2
+      - get:
+          url: "/search"
+          name: "Página de búsqueda"
+      - think: 3
+      - get:
+          url: "/about"
+          name: "Página acerca de"
+
+  # Escenario 2: Búsqueda de artículos
+  - name: "Búsqueda de artículos"
+    weight: 30
+    flow:
+      - get:
+          url: "{{ apiUrl }}/items"
+          name: "Listar artículos"
+          qs:
+            page: 1
+            limit: 12
+      - think: 2
+      - get:
+          url: "{{ apiUrl }}/items"
+          name: "Búsqueda con filtros"
+          qs:
+            category: "libros"
+            condition: "bueno"
+            page: 1
+            limit: 12
+      - think: 1
+      - get:
+          url: "{{ apiUrl }}/items/search"
+          name: "Búsqueda por texto"
+          qs:
+            q: "programación"
+            page: 1
+            limit: 12
+
+  # Escenario 3: Autenticación y gestión de perfil
+  - name: "Autenticación"
+    weight: 20
+    flow:
+      # Registro de usuario
+      - post:
+          url: "{{ apiUrl }}/auth/register"
+          name: "Registro de usuario"
+          json:
+            name: "Usuario Test {{ $randomString() }}"
+            email: "test{{ $randomInt(1000, 9999) }}@example.com"
+            password: "Password123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - think: 2
+      
+      # Login (simulando usuario existente)
+      - post:
+          url: "{{ apiUrl }}/auth/login"
+          name: "Login de usuario"
+          json:
+            email: "{{ email }}"
+            password: "Password123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - think: 1
+      
+      # Obtener perfil
+      - get:
+          url: "{{ apiUrl }}/auth/me"
+          name: "Obtener perfil"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  # Escenario 4: Publicación de artículos
+  - name: "Publicación de artículos"
+    weight: 10
+    flow:
+      # Login primero
+      - post:
+          url: "{{ apiUrl }}/auth/login"
+          name: "Login para publicar"
+          json:
+            email: "test@example.com"
+            password: "Password123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - think: 2
+      
+      # Publicar artículo
+      - post:
+          url: "{{ apiUrl }}/items"
+          name: "Publicar artículo"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Artículo de prueba {{ $randomString() }}"
+            description: "Descripción del artículo de prueba de rendimiento"
+            category: "otros"
+            condition: "bueno"
+            location:
+              type: "Point"
+              coordinates: [-3.7038, 40.4168]
+            address: "Madrid, España"
+          capture:
+            - json: "$.data._id"
+              as: "itemId"
+      - think: 1
+      
+      # Obtener artículo creado
+      - get:
+          url: "{{ apiUrl }}/items/{{ itemId }}"
+          name: "Obtener artículo creado"
+
+# Funciones auxiliares para generar datos aleatorios
+before:
+  flow:
+    - log: "Iniciando pruebas de carga para Ecommunitas"
+
+after:
+  flow:
+    - log: "Finalizando pruebas de carga"

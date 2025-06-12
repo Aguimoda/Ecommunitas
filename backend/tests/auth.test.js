@@ -1,8 +1,13 @@
-const mongoose = require('mongoose');
+// Configurar entorno de prueba
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'secret_para_pruebas_unitarias';
+process.env.JWT_EXPIRE = '1d';
+
 const request = require('supertest');
+const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
-const app = require('../server'); // Ajusta según la estructura de tu proyecto
-const User = require('../models/User');
+const app = require('../dist/src/server').default; // Importar el export default del servidor compilado
+const User = require('../dist/src/models/User').default;
 
 // Configuración de base de datos en memoria para pruebas
 let mongoServer;
@@ -37,7 +42,7 @@ describe('Sistema de Autenticación', () => {
         .post('/api/v1/auth/register')
         .send(userData);
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.token).toBeDefined();
 
@@ -66,7 +71,7 @@ describe('Sistema de Autenticación', () => {
 
       expect(response.statusCode).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('email ya está registrado');
+      expect(response.body.error).toContain('El usuario ya existe con este email');
     });
 
     it('debería rechazar el registro con contraseña débil', async () => {

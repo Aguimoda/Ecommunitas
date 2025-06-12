@@ -1,7 +1,84 @@
 /**
- * Shared Geolocation Composable
- * Handles user geolocation with improved error handling and TypeScript support
- * Provides distance calculation utilities and location watching capabilities
+ * @file useGeolocation.ts
+ * @description Composable para manejo de geolocalización en Ecommunitas
+ * 
+ * Este composable proporciona una interfaz completa para trabajar con la
+ * geolocalización del usuario, incluyendo obtención de ubicación actual,
+ * seguimiento de cambios de ubicación y cálculos de distancia geográfica.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📍 Obtención de ubicación actual del usuario
+ * - 🔄 Seguimiento en tiempo real de cambios de ubicación
+ * - 📏 Cálculo de distancias entre coordenadas (fórmula Haversine)
+ * - 🚨 Manejo robusto de errores de geolocalización
+ * - ⚙️ Configuración personalizable de precisión y timeouts
+ * - 🔔 Notificaciones automáticas de estado
+ * - 📱 Soporte completo para dispositivos móviles
+ * 
+ * FUNCIONALIDADES:
+ * - Detección automática de soporte de geolocalización
+ * - Mapeo inteligente de errores nativos a mensajes localizados
+ * - Formateo automático de distancias (metros/kilómetros)
+ * - Verificación de proximidad dentro de un radio específico
+ * - Cache configurable para optimizar rendimiento
+ * - Limpieza automática de watchers al desmontar
+ * 
+ * CASOS DE USO:
+ * - Búsqueda de artículos por proximidad
+ * - Autocompletado de ubicación en formularios
+ * - Filtrado geográfico de resultados
+ * - Cálculo de distancias para delivery
+ * - Mapas interactivos con ubicación del usuario
+ * 
+ * CONFIGURACIÓN:
+ * - enableHighAccuracy: Precisión alta (GPS vs red)
+ * - timeout: Tiempo máximo de espera (ms)
+ * - maximumAge: Tiempo de cache de ubicación (ms)
+ * - showNotifications: Mostrar notificaciones automáticas
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Geolocation API nativa del navegador
+ * - Fórmula Haversine para cálculos de distancia
+ * - Sistema de notificaciones integrado
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico
+ * const { 
+ *   getCurrentLocation, 
+ *   coordinates, 
+ *   loading, 
+ *   calculateDistance 
+ * } = useGeolocation()
+ * 
+ * // Obtener ubicación actual
+ * try {
+ *   const coords = await getCurrentLocation()
+ *   console.log(`Ubicación: ${coords.lat}, ${coords.lng}`)
+ * } catch (error) {
+ *   console.error('Error de geolocalización:', error.message)
+ * }
+ * 
+ * // Calcular distancia entre dos puntos
+ * const distance = calculateDistance(
+ *   { lat: 40.4168, lng: -3.7038 }, // Madrid
+ *   { lat: 41.3851, lng: 2.1734 }   // Barcelona
+ * )
+ * console.log(`Distancia: ${formatDistance(distance)}`)
+ * 
+ * // Configuración personalizada
+ * const geoCustom = useGeolocation({
+ *   enableHighAccuracy: false,
+ *   timeout: 5000,
+ *   showNotifications: false
+ * })
+ * ```
  */
 
 import { ref, computed } from 'vue'

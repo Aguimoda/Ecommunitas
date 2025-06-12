@@ -1,7 +1,99 @@
 /**
- * Shared Image Upload Composable
- * Handles image upload functionality with validation, preview, and compression
- * Provides consistent image handling across the application
+ * @file useImageUpload.ts
+ * @description Composable para manejo de carga de imágenes en Ecommunitas
+ * 
+ * Este composable proporciona una solución completa para la carga, validación,
+ * compresión y gestión de imágenes en la aplicación. Incluye funcionalidades
+ * avanzadas como previsualización, redimensionamiento automático y validación
+ * de archivos con mensajes de error localizados.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📸 Carga múltiple de imágenes con drag & drop
+ * - 🔍 Previsualización automática de imágenes
+ * - 🗜️ Compresión inteligente para optimizar tamaño
+ * - ✅ Validación exhaustiva de archivos (tipo, tamaño, dimensiones)
+ * - 📏 Redimensionamiento automático según límites configurables
+ * - 🔄 Reordenamiento de imágenes por drag & drop
+ * - 💾 Gestión eficiente de memoria con limpieza automática
+ * - 📊 Progreso de carga en tiempo real
+ * 
+ * FUNCIONALIDADES:
+ * - Validación de tipos de archivo (JPEG, PNG, WebP)
+ * - Límites configurables de tamaño y cantidad
+ * - Compresión con calidad ajustable
+ * - Generación automática de FormData para APIs
+ * - Formateo legible de tamaños de archivo
+ * - Mensajes de error descriptivos y localizados
+ * - Limpieza automática de URLs de previsualización
+ * 
+ * VALIDACIONES INCLUIDAS:
+ * - Tipo de archivo (solo imágenes permitidas)
+ * - Tamaño máximo por archivo (configurable)
+ * - Número máximo de archivos (configurable)
+ * - Dimensiones máximas de imagen
+ * - Detección de archivos corruptos
+ * 
+ * CASOS DE USO:
+ * - Carga de fotos de artículos en marketplace
+ * - Actualización de avatares de usuario
+ * - Galería de imágenes en perfiles
+ * - Documentos gráficos en formularios
+ * - Contenido multimedia en publicaciones
+ * 
+ * CONFIGURACIÓN:
+ * - maxFiles: Número máximo de archivos (default: 5)
+ * - maxSizeBytes: Tamaño máximo por archivo (default: 5MB)
+ * - allowedTypes: Tipos MIME permitidos
+ * - compressQuality: Calidad de compresión (0-1)
+ * - maxWidth/maxHeight: Dimensiones máximas
+ * - showNotifications: Mostrar notificaciones automáticas
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Canvas API para compresión de imágenes
+ * - FileReader API para previsualización
+ * - FormData API para envío a servidor
+ * - Sistema de notificaciones integrado
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico
+ * const {
+ *   images,
+ *   addFiles,
+ *   removeImage,
+ *   getFormData,
+ *   isUploading
+ * } = useImageUpload()
+ * 
+ * // Configuración personalizada
+ * const imageUpload = useImageUpload({
+ *   maxFiles: 3,
+ *   maxSizeBytes: 2 * 1024 * 1024, // 2MB
+ *   compressQuality: 0.7,
+ *   maxWidth: 1200,
+ *   maxHeight: 800
+ * })
+ * 
+ * // Manejar selección de archivos
+ * const handleFileSelect = async (event: Event) => {
+ *   const files = (event.target as HTMLInputElement).files
+ *   if (files) {
+ *     await addFiles(files)
+ *   }
+ * }
+ * 
+ * // Enviar imágenes al servidor
+ * const uploadImages = async () => {
+ *   const formData = getFormData('photos')
+ *   await api.post('/upload', formData)
+ * }
+ * ```
  */
 
 import { ref, computed } from 'vue'

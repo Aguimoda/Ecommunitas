@@ -1,7 +1,64 @@
 /**
  * @file setup.ts
- * @description Configuración global para los tests de Vitest
- * Configura Pinia, Vue Router y otros servicios necesarios para testing
+ * @description Configuración global para el entorno de testing de Ecommunitas
+ * @module Tests/Setup
+ * @version 1.0.0
+ * @author Equipo de Desarrollo Ecommunitas
+ * @created 2024
+ * 
+ * Este archivo configura el entorno global de testing para toda la aplicación.
+ * Proporciona mocks, configuraciones y utilidades necesarias para ejecutar
+ * tests unitarios y de integración de manera consistente y aislada.
+ * 
+ * CONFIGURACIONES INCLUIDAS:
+ * =========================
+ * 
+ * 🏪 **PINIA (Estado Global)**:
+ * - Instancia limpia de Pinia para cada test
+ * - Aislamiento completo entre tests
+ * - Configuración automática de stores
+ * 
+ * 🛣️ **VUE ROUTER**:
+ * - Router mock con rutas básicas
+ * - Navegación simulada para tests
+ * - Configuración global para Vue Test Utils
+ * 
+ * 🔇 **CONSOLE MOCKING**:
+ * - Silenciamiento de warnings de Vue
+ * - Filtrado de logs innecesarios
+ * - Preservación de errores importantes
+ * 
+ * 🌐 **WEB APIs MOCKING**:
+ * - fetch: Cliente HTTP simulado
+ * - localStorage: Almacenamiento local mock
+ * - sessionStorage: Almacenamiento de sesión mock
+ * - location: Objeto location del navegador
+ * - IntersectionObserver: Observer de intersección
+ * - ResizeObserver: Observer de redimensionamiento
+ * 
+ * VENTAJAS DE ESTA CONFIGURACIÓN:
+ * ==============================
+ * 
+ * ✅ **Aislamiento**: Cada test ejecuta en un entorno limpio
+ * ✅ **Consistencia**: Configuración uniforme para todos los tests
+ * ✅ **Performance**: Mocks optimizados para velocidad
+ * ✅ **Debugging**: Logs controlados y útiles
+ * ✅ **Compatibilidad**: Soporte completo para Vue 3 y Pinia
+ * ✅ **Realismo**: Mocks que simulan el comportamiento real
+ * 
+ * @example
+ * ```typescript
+ * // Este setup se ejecuta automáticamente antes de cada test
+ * // No necesitas importarlo manualmente en tus archivos de test
+ * 
+ * // En tus tests, puedes usar los mocks configurados:
+ * import { localStorageMock } from '@/tests/setup'
+ * 
+ * it('should use localStorage mock', () => {
+ *   localStorageMock.setItem('key', 'value')
+ *   expect(localStorageMock.setItem).toHaveBeenCalledWith('key', 'value')
+ * })
+ * ```
  */
 
 import { createPinia, setActivePinia } from 'pinia'

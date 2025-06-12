@@ -1,9 +1,44 @@
+/**
+ * @file simple-config.ts
+ * @description Configuración simplificada de variables de entorno
+ * @module Config/SimpleConfig
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona:
+ * - Carga y validación de variables de entorno críticas
+ * - Configuración centralizada con valores por defecto
+ * - Validación automática de variables requeridas
+ * - Tipado seguro para todas las configuraciones
+ * - Configuración para desarrollo y producción
+ */
+
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Simple configuration object - keeping it minimal like the original
+/**
+ * Objeto de configuración principal de la aplicación
+ * 
+ * @constant {object} config
+ * @description Contiene todas las variables de entorno necesarias para la aplicación
+ * con valores por defecto seguros para desarrollo
+ * 
+ * @property {string} NODE_ENV - Entorno de ejecución (development/production)
+ * @property {number} PORT - Puerto del servidor
+ * @property {string} DATABASE_URI - URI de conexión a MongoDB
+ * @property {string} JWT_SECRET - Clave secreta para JWT
+ * @property {string} JWT_EXPIRE - Tiempo de expiración del JWT
+ * @property {number} JWT_COOKIE_EXPIRE - Días de expiración de cookies JWT
+ * @property {string} CLOUDINARY_CLOUD_NAME - Nombre del cloud de Cloudinary
+ * @property {string} CLOUDINARY_API_KEY - API key de Cloudinary
+ * @property {string} CLOUDINARY_API_SECRET - API secret de Cloudinary
+ * @property {string} FRONTEND_URL - URL del frontend para CORS
+ * @property {number} MAX_FILE_UPLOAD - Tamaño máximo de archivos en bytes
+ * @property {string} FILE_UPLOAD_PATH - Ruta para archivos temporales
+ */
 export const config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '5000', 10),

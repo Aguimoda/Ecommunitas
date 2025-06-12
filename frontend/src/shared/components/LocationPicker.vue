@@ -1,3 +1,33 @@
+<!--
+/**
+ * @file LocationPicker.vue
+ * @description Componente interactivo para selección de ubicaciones geográficas
+ * 
+ * Este componente proporciona una interfaz completa para que los usuarios puedan:
+ * - Buscar ubicaciones por texto usando la API de Nominatim
+ * - Obtener su ubicación actual usando geolocalización del navegador
+ * - Seleccionar ubicaciones haciendo clic en un mapa interactivo
+ * - Visualizar la ubicación seleccionada con un marcador
+ * 
+ * Características principales:
+ * - Integración con Leaflet para mapas interactivos
+ * - Búsqueda de ubicaciones en tiempo real
+ * - Geolocalización automática
+ * - Interfaz responsive y accesible
+ * - Manejo de errores y estados de carga
+ * 
+ * Dependencias:
+ * - Vue 3 Composition API
+ * - Leaflet para mapas
+ * - Vue2Leaflet para integración con Vue
+ * - API de Nominatim para geocodificación
+ * - Geolocation API del navegador
+ * 
+ * @author Sistema Ecommunitas
+ * @version 1.0.0
+ * @since 2024
+ */
+-->
 <template>
   <div class="location-picker">
     <!-- Search Section -->
@@ -89,6 +119,9 @@
 </template>
 
 <script setup>
+/* ============================================================================
+ * IMPORTS Y DEPENDENCIAS
+ * ============================================================================ */
 import { ref, onMounted, watch } from 'vue'
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet'
 import { OpenStreetMapProvider } from 'leaflet-geosearch'
@@ -96,48 +129,111 @@ import 'leaflet/dist/leaflet.css'
 import './LocationPicker.css'
 import { displayError } from '@/shared/utils/errorHandler'
 
-// Props
+/* ============================================================================
+ * PROPS Y CONFIGURACIÓN DEL COMPONENTE
+ * ============================================================================ */
+
+/**
+ * Props del componente LocationPicker
+ * @typedef {Object} LocationPickerProps
+ * @property {Object|null} initialLocation - Ubicación inicial para mostrar en el mapa
+ * @property {string} initialAddress - Dirección inicial para mostrar
+ */
 const props = defineProps({
+  /**
+   * Ubicación inicial para mostrar en el mapa
+   * @type {Object|null}
+   * @default null
+   * @example { lat: 40.4168, lng: -3.7038 }
+   */
   initialLocation: {
     type: Object,
     default: null
   },
+  /**
+   * Dirección inicial para mostrar en el componente
+   * @type {string}
+   * @default ''
+   */
   initialAddress: {
     type: String,
     default: ''
   }
 })
 
-// Emits
-const emit = defineEmits(['location-selected', 'location-cleared'])
+/**
+ * Eventos emitidos por el componente
+ * @typedef {Object} LocationPickerEmits
+ * @property {Function} location-selected - Se emite cuando se selecciona una ubicación
+ * @property {Function} location-cleared - Se emite cuando se limpia la ubicación
+ */
+const emit = defineEmits([
+  /**
+   * Evento emitido cuando el usuario selecciona una ubicación
+   * @param {Object} location - Objeto con lat, lng y address
+   */
+  'location-selected',
+  /**
+   * Evento emitido cuando el usuario limpia la ubicación seleccionada
+   */
+  'location-cleared'
+])
 
-// Toast notifications
-// const toast = useToast()
+/* ============================================================================
+ * ESTADO REACTIVO DEL COMPONENTE
+ * ============================================================================ */
 
-// Reactive data
+// Variables para búsqueda de ubicaciones
+/** @type {Ref<string>} Query de búsqueda introducido por el usuario */
 const searchQuery = ref('')
+/** @type {Ref<Array>} Resultados de la búsqueda de ubicaciones */
 const searchResults = ref([])
+/** @type {Ref<boolean>} Indica si se está obteniendo la ubicación actual */
 const isGettingLocation = ref(false)
-const selectedLocation = ref(props.initialLocation)
-const selectedAddress = ref(props.initialAddress)
-const zoom = ref(13)
-const center = ref([40.4168, -3.7038]) // Madrid por defecto
 
-// Map configuration
+// Variables para ubicación seleccionada
+/** @type {Ref<Object|null>} Ubicación actualmente seleccionada */
+const selectedLocation = ref(props.initialLocation)
+/** @type {Ref<string>} Dirección de la ubicación seleccionada */
+const selectedAddress = ref(props.initialAddress)
+
+// Variables para configuración del mapa
+/** @type {Ref<number>} Nivel de zoom del mapa */
+const zoom = ref(13)
+/** @type {Ref<Array>} Centro del mapa [lat, lng] - Madrid por defecto */
+const center = ref([40.4168, -3.7038])
+
+/* ============================================================================
+ * CONFIGURACIÓN DEL MAPA Y SERVICIOS
+ * ============================================================================ */
+
+/** URL del servidor de tiles de OpenStreetMap */
 const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+/** Atribución requerida para OpenStreetMap */
 const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 
-// Geosearch provider
+/** Proveedor de geocodificación para búsqueda de ubicaciones */
 const provider = new OpenStreetMapProvider()
 
-// Search functionality
+/* ============================================================================
+ * FUNCIONES DE BÚSQUEDA Y GEOLOCALIZACIÓN
+ * ============================================================================ */
+
+/** Timeout para debounce de búsqueda */
 let searchTimeout = null
 
+/**
+ * Maneja la entrada de texto en el campo de búsqueda
+ * Implementa debounce para evitar búsquedas excesivas
+ * @function onSearchInput
+ */
 const onSearchInput = () => {
+  // Cancelar búsqueda anterior si existe
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
   
+  // Programar nueva búsqueda con delay de 300ms
   searchTimeout = setTimeout(() => {
     if (searchQuery.value.trim().length > 2) {
       searchLocation()
@@ -147,34 +243,64 @@ const onSearchInput = () => {
   }, 300)
 }
 
+/**
+ * Busca ubicaciones usando la API de Nominatim
+ * @async
+ * @function searchLocation
+ * @returns {Promise<void>}
+ */
 const searchLocation = async () => {
   if (!searchQuery.value.trim()) return
   
   try {
+    // Realizar búsqueda usando el proveedor de OpenStreetMap
     const results = await provider.search({ query: searchQuery.value })
-    searchResults.value = results.slice(0, 5) // Limitar a 5 resultados
+    // Limitar resultados a 5 para mejor UX
+    searchResults.value = results.slice(0, 5)
   } catch (error) {
     console.error('Error searching location:', error)
+    displayError('Error al buscar ubicación')
     searchResults.value = []
   }
 }
 
+/**
+ * Selecciona un resultado de búsqueda y actualiza el mapa
+ * @function selectSearchResult
+ * @param {Object} result - Resultado de búsqueda seleccionado
+ * @param {number} result.y - Latitud de la ubicación
+ * @param {number} result.x - Longitud de la ubicación
+ * @param {string} result.label - Etiqueta descriptiva de la ubicación
+ */
 const selectSearchResult = (result) => {
+  // Establecer nueva ubicación seleccionada
   selectedLocation.value = {
     lat: result.y,
     lng: result.x
   }
   selectedAddress.value = result.label
+  
+  // Centrar mapa en la nueva ubicación
   center.value = [result.y, result.x]
   zoom.value = 15
+  
+  // Limpiar resultados y actualizar campo de búsqueda
   searchResults.value = []
   searchQuery.value = result.label
 }
 
-// Geolocation functionality
+/* ============================================================================
+ * FUNCIONES DE GEOLOCALIZACIÓN
+ * ============================================================================ */
+
+/**
+ * Obtiene la ubicación actual del usuario usando la API de geolocalización
+ * @function getCurrentLocation
+ */
 const getCurrentLocation = () => {
+  // Verificar soporte de geolocalización
   if (!navigator.geolocation) {
-    alert.log('La geolocalización no está soportada en este navegador')
+    displayError('La geolocalización no está soportada en este navegador')
     return
   }
 
@@ -185,11 +311,12 @@ const getCurrentLocation = () => {
       const lat = position.coords.latitude
       const lng = position.coords.longitude
       
+      // Establecer ubicación obtenida
       selectedLocation.value = { lat, lng }
       center.value = [lat, lng]
       zoom.value = 15
       
-      // Reverse geocoding
+      // Geocodificación inversa para obtener dirección
       try {
         const results = await provider.search({ query: `${lat},${lng}` })
         if (results.length > 0) {
@@ -198,15 +325,21 @@ const getCurrentLocation = () => {
         }
       } catch (error) {
         console.error('Error in reverse geocoding:', error)
+        // Mostrar coordenadas si no se puede obtener dirección
         selectedAddress.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`
       }
       
       isGettingLocation.value = false
     },
+    /**
+     * Maneja errores de geolocalización
+     * @param {GeolocationPositionError} error - Error de geolocalización
+     */
     (error) => {
       console.error('Error getting location:', error)
       let message = 'Error obteniendo la ubicación'
       
+      // Personalizar mensaje según tipo de error
       switch (error.code) {
         case error.PERMISSION_DENIED:
           message = 'Permisos de ubicación denegados'
@@ -223,25 +356,40 @@ const getCurrentLocation = () => {
       isGettingLocation.value = false
     },
     {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000
+      // Opciones de geolocalización
+      enableHighAccuracy: true,  // Usar GPS si está disponible
+      timeout: 10000,           // Timeout de 10 segundos
+      maximumAge: 60000         // Cache de 1 minuto
     }
   )
 }
 
-// Map click handler
+/* ============================================================================
+ * FUNCIONES DE INTERACCIÓN CON EL MAPA
+ * ============================================================================ */
+
+/**
+ * Maneja clics en el mapa para seleccionar ubicaciones
+ * @async
+ * @function onMapClick
+ * @param {Object} event - Evento de clic del mapa
+ * @param {Object} event.latlng - Coordenadas del clic
+ * @param {number} event.latlng.lat - Latitud
+ * @param {number} event.latlng.lng - Longitud
+ */
 const onMapClick = async (event) => {
   const { lat, lng } = event.latlng
   
+  // Establecer nueva ubicación seleccionada
   selectedLocation.value = { lat, lng }
   
-  // Reverse geocoding
+  // Geocodificación inversa para obtener dirección
   try {
     const results = await provider.search({ query: `${lat},${lng}` })
     if (results.length > 0) {
       selectedAddress.value = results[0].label
     } else {
+      // Mostrar coordenadas si no hay dirección disponible
       selectedAddress.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`
     }
   } catch (error) {
@@ -250,13 +398,20 @@ const onMapClick = async (event) => {
   }
 }
 
-// Marker drag handler
+/**
+ * Maneja el arrastre del marcador en el mapa
+ * @async
+ * @function onMarkerDrag
+ * @param {Object} event - Evento de arrastre del marcador
+ * @param {Object} event.target - Marcador arrastrado
+ */
 const onMarkerDrag = async (event) => {
   const { lat, lng } = event.target.getLatLng()
   
+  // Actualizar ubicación seleccionada
   selectedLocation.value = { lat, lng }
   
-  // Reverse geocoding
+  // Geocodificación inversa para obtener dirección
   try {
     const results = await provider.search({ query: `${lat},${lng}` })
     if (results.length > 0) {
@@ -270,7 +425,15 @@ const onMarkerDrag = async (event) => {
   }
 }
 
-// Action handlers
+/* ============================================================================
+ * FUNCIONES DE ACCIÓN
+ * ============================================================================ */
+
+/**
+ * Confirma la ubicación seleccionada y emite el evento correspondiente
+ * @function confirmLocation
+ * @emits location-selected - Emite la ubicación y dirección seleccionadas
+ */
 const confirmLocation = () => {
   if (selectedLocation.value) {
     emit('location-selected', {
@@ -282,6 +445,11 @@ const confirmLocation = () => {
   }
 }
 
+/**
+ * Limpia la ubicación seleccionada y resetea el estado
+ * @function clearLocation
+ * @emits location-cleared - Emite evento de limpieza de ubicación
+ */
 const clearLocation = () => {
   selectedLocation.value = null
   selectedAddress.value = ''
@@ -290,7 +458,13 @@ const clearLocation = () => {
   emit('location-cleared')
 }
 
-// Initialize map
+/* ============================================================================
+ * INICIALIZACIÓN Y CICLO DE VIDA
+ * ============================================================================ */
+
+/**
+ * Inicializa el mapa con la ubicación inicial si se proporciona
+ */
 onMounted(() => {
   if (props.initialLocation) {
     center.value = [props.initialLocation.lat, props.initialLocation.lng]
@@ -298,7 +472,14 @@ onMounted(() => {
   }
 })
 
-// Watch for prop changes
+/* ============================================================================
+ * WATCHERS - OBSERVADORES DE CAMBIOS
+ * ============================================================================ */
+
+/**
+ * Observa cambios en la ubicación inicial
+ * Actualiza el mapa cuando se proporciona una nueva ubicación inicial
+ */
 watch(() => props.initialLocation, (newLocation) => {
   if (newLocation) {
     selectedLocation.value = newLocation
@@ -307,6 +488,10 @@ watch(() => props.initialLocation, (newLocation) => {
   }
 })
 
+/**
+ * Observa cambios en la dirección inicial
+ * Actualiza los campos de dirección cuando se proporciona una nueva dirección inicial
+ */
 watch(() => props.initialAddress, (newAddress) => {
   if (newAddress) {
     selectedAddress.value = newAddress
@@ -315,5 +500,12 @@ watch(() => props.initialAddress, (newAddress) => {
 })
 </script>
 
-<!-- Styles are imported from external CSS file -->
-<!-- Los estilos se importan desde el archivo CSS externo -->
+<!-- 
+  ESTILOS
+  Los estilos para este componente se definen en un archivo CSS externo
+  para mantener la separación de responsabilidades y facilitar el mantenimiento.
+  
+  STYLES
+  Styles for this component are defined in an external CSS file
+  to maintain separation of concerns and facilitate maintenance.
+-->

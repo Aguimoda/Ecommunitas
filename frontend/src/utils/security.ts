@@ -1,7 +1,19 @@
 /**
- * @fileoverview Utilidades de seguridad para la aplicación
- * @description Proporciona funciones para configurar políticas de seguridad, sanitización de datos,
- * manejo de sesiones y protección contra vulnerabilidades comunes como XSS y CSRF
+ * @file security.ts
+ * @description Utilidades de seguridad para Ecommunitas
+ * @module Utils/Security
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona funciones críticas de seguridad:
+ * - Configuración de Content Security Policy (CSP)
+ * - Sanitización de datos y prevención de XSS
+ * - Manejo seguro de sesiones y tokens
+ * - Protección contra vulnerabilidades CSRF
+ * - Validación y escape de contenido HTML
+ * - Configuración de headers de seguridad HTTP
+ * - Gestión de políticas de seguridad del navegador
  */
 
 import { ref } from 'vue'

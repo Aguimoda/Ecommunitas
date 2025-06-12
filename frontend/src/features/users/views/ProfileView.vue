@@ -1,4 +1,57 @@
+<!--
+/**
+ * @file ProfileView.vue
+ * @description Vista de perfil de usuario en Ecommunitas
+ * 
+ * Este componente muestra la información completa del perfil de un usuario,
+ * incluyendo sus datos personales, biografía, ubicación y todos los artículos
+ * que ha publicado en la plataforma. Permite la edición del perfil y gestión
+ * de artículos propios.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 👤 Visualización completa del perfil de usuario
+ * - ✏️ Edición de información personal
+ * - 📝 Gestión de artículos publicados
+ * - 🖼️ Manejo de avatar y fotos de perfil
+ * - 📱 Diseño responsive y accesible
+ * - 🔒 Validación de permisos de edición
+ * - 📊 Estadísticas de usuario
+ * 
+ * FUNCIONALIDADES:
+ * - Visualización de datos del usuario (nombre, email, bio, ubicación)
+ * - Edición de perfil con modal dedicado
+ * - Lista de artículos publicados por el usuario
+ * - Edición y eliminación de artículos propios
+ * - Carga y actualización de avatar
+ * - Estadísticas de actividad del usuario
+ * - Estados de carga y error bien definidos
+ * 
+ * SECCIONES DEL PERFIL:
+ * - Información básica (avatar, nombre, email)
+ * - Biografía personal
+ * - Ubicación geográfica
+ * - Fecha de registro
+ * - Lista de artículos publicados
+ * - Estadísticas de actividad
+ * 
+ * MODALES INTEGRADOS:
+ * - ProfileEditor: Para editar información del perfil
+ * - EditItemModal: Para editar artículos individuales
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Vue Router para navegación
+ * - Composables para lógica reutilizable
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
+  <!-- Vista principal del perfil de usuario -->
   <div class="profile-view">
     <!-- Sección de información del usuario -->
     <div class="user-info-container">
@@ -85,7 +138,7 @@
           <i class="fas fa-box-open"></i>
           <h3>No tienes artículos publicados</h3>
           <p>¡Publica tu primer artículo para empezar a intercambiar!</p>
-          <router-link to="/items/new" class="publish-btn">
+          <router-link to="/post-item" class="publish-btn">
             <i class="fas fa-plus"></i> Publicar Artículo
           </router-link>
         </div>

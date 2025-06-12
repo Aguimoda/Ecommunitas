@@ -44,6 +44,7 @@ export interface Item {
     lng: number
   }
   images: string[]
+  imageUrls: string[]  // Campo del backend
   availability: boolean
   userId: string
   user?: {
@@ -149,7 +150,7 @@ const REQUEST_TIMEOUT = 30000
  * @param {string} context - Contexto adicional para el error (opcional)
  * @throws {Error} Lanza un error formateado con mensaje descriptivo
  */
-const handleItemError = (error: any, context?: string): never => {
+const handleItemError = (error: unknown, context?: string): never => {
   const errorResponse = processError(error)
   
   // Maneja errores específicos relacionados con items
@@ -258,8 +259,6 @@ const convertFiltersToParams = (filters: SearchFilters): SearchParams => {
  */
 export const getItems = async (params: Partial<SearchParams> = {}): Promise<ItemsResponse> => {
   try {
-    console.log('getItems called with params:', params)
-    
     const config: AxiosRequestConfig = {
       params,
       timeout: REQUEST_TIMEOUT,
@@ -268,11 +267,7 @@ export const getItems = async (params: Partial<SearchParams> = {}): Promise<Item
       }
     }
     
-    console.log('Making request to:', API_URL, 'with config:', config)
-    
     const response: AxiosResponse<ItemsResponse> = await axios.get(API_URL, config)
-    
-    console.log('getItems response:', response.data)
     
     return response.data
   } catch (error) {
@@ -304,8 +299,8 @@ export const searchItems = async (
     
     const response: AxiosResponse<ItemsResponse> = await axios.get(ITEM_ROUTES.SEARCH, config)
     return response.data
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if ((error as any)?.name === 'AbortError') {
       throw new Error('Búsqueda cancelada')
     }
     handleItemError(error, 'Error en la búsqueda')
@@ -350,7 +345,6 @@ export const createItem = async (itemData: CreateItemData | FormData): Promise<I
       timeout: REQUEST_TIMEOUT
     })
     
-    console.log('itemService.createItem: Response:', response.data)
     return response.data
   } catch (error) {
     console.error('itemService.createItem: Error:', error)

@@ -47,122 +47,237 @@
  */
 -->
 <script setup>
-// Importaciones de Vue y librerías externas
+// ============================================================================
+// IMPORTACIONES DE DEPENDENCIAS EXTERNAS
+// ============================================================================
+
+/**
+ * Importaciones de Vue y librerías externas
+ * - onMounted: Hook de ciclo de vida para ejecutar código al montar el componente
+ * - axios: Cliente HTTP para comunicación con la API
+ */
 import { onMounted } from 'vue'
 import axios from 'axios'
 
-// Importaciones de componentes locales
+// ============================================================================
+// IMPORTACIONES DE COMPONENTES LOCALES
+// ============================================================================
+
+/**
+ * Importación del componente de navegación
+ * NavBar es el componente que se muestra en la parte superior de todas las páginas
+ */
 import { NavBar } from '@/shared/components'
 
-// Importaciones de stores (gestión de estado)
+// ============================================================================
+// IMPORTACIONES DE STORES (GESTIÓN DE ESTADO)
+// ============================================================================
+
+/**
+ * Importación del store de autenticación
+ * Maneja todo el estado relacionado con la sesión del usuario
+ */
 import { useAuthStore } from '@/features/auth'
+
+// ============================================================================
+// INICIALIZACIÓN DE STORES
+// ============================================================================
 
 /**
  * Inicialización del store de autenticación
- * Este store maneja todo el estado relacionado con la autenticación del usuario
+ * Este store maneja todo el estado relacionado con la autenticación del usuario:
+ * - Estado de login/logout
+ * - Información del usuario actual
+ * - Tokens de autenticación
+ * - Permisos y roles
  */
 const authStore = useAuthStore()
 
+// ============================================================================
+// CONFIGURACIÓN DE CICLO DE VIDA
+// ============================================================================
+
 /**
  * Hook de ciclo de vida - se ejecuta cuando el componente se monta
- * Configura la aplicación y inicializa servicios críticos
+ * 
+ * Esta función es crítica para la inicialización de la aplicación y se encarga de:
+ * 1. Configurar interceptores de Axios para autenticación automática
+ * 2. Inicializar el sistema de autenticación
+ * 3. Configurar manejo global de errores HTTP
+ * 4. Establecer configuraciones base para la comunicación con la API
+ * 
+ * @async
+ * @throws {Error} Si falla la inicialización de algún servicio crítico
  */
 onMounted(async () => {
+  // ==========================================================================
+  // CONFIGURACIÓN DE AXIOS
+  // ==========================================================================
+  
   /**
    * Configuración de Axios
-   * No configuramos baseURL porque usamos el proxy de Vite
-   * que ya está configurado en vite.config.js para redirigir
-   * las peticiones al backend en desarrollo
+   * 
+   * NOTA IMPORTANTE: No configuramos baseURL porque usamos el proxy de Vite
+   * que ya está configurado en vite.config.js para redirigir automáticamente
+   * las peticiones al backend en desarrollo.
+   * 
+   * En producción, las peticiones se realizan al mismo dominio donde está
+   * desplegado el frontend, asumiendo que el backend está en el mismo servidor.
    */
+  
+  // ==========================================================================
+  // INICIALIZACIÓN DEL SISTEMA DE AUTENTICACIÓN
+  // ==========================================================================
   
   /**
    * Inicialización del sistema de autenticación
-   * Verifica si hay un token válido almacenado y restaura la sesión del usuario
+   * 
+   * Esta función verifica si hay un token válido almacenado en localStorage
+   * y restaura la sesión del usuario si es válido. Incluye:
+   * - Verificación de token en localStorage
+   * - Validación del token con el backend
+   * - Carga de información del usuario
+   * - Configuración de estado de autenticación
+   * 
+   * @async
+   * @throws {Error} Si falla la validación del token
    */
   await authStore.initialize()
   
+  // ==========================================================================
+  // CONFIGURACIÓN DE INTERCEPTORES DE AXIOS
+  // ==========================================================================
+  
   /**
    * Configuración de interceptor de Axios para peticiones
-   * Agrega automáticamente el token de autenticación a todas las peticiones HTTP
+   * 
+   * Este interceptor se ejecuta antes de cada petición HTTP y se encarga de:
+   * - Agregar automáticamente el token de autenticación
+   * - Registrar información de debug en desarrollo
+   * - Configurar headers necesarios
+   * 
    * Esto evita tener que agregar manualmente el token en cada llamada a la API
+   * y centraliza la lógica de autenticación.
+   * 
+   * @param {Object} config - Configuración de la petición Axios
+   * @returns {Object} Configuración modificada con headers de autenticación
    */
   axios.interceptors.request.use(
     config => {
-      console.log('🌐 [DEBUG] Axios Request Interceptor:')
-      console.log('🌐 [DEBUG] URL:', config.url)
-      console.log('🌐 [DEBUG] Method:', config.method)
-      console.log('🌐 [DEBUG] BaseURL:', config.baseURL)
-      console.log('🌐 [DEBUG] Data:', config.data)
-      
       // Obtener el token del localStorage
       const token = localStorage.getItem('token')
-      console.log('🌐 [DEBUG] Token from localStorage:', !!token)
       
       // Si existe un token, agregarlo al header Authorization
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
-        console.log('🌐 [DEBUG] Authorization header added')
       }
       
-      console.log('🌐 [DEBUG] Final headers:', config.headers)
       return config
     }, 
     error => {
-      console.error('💥 [DEBUG] Axios Request Error:', error)
       // Manejar errores en la configuración de la petición
       return Promise.reject(error)
     }
   )
   
   /**
-   * Opcional: Configurar interceptor para respuestas
-   * Podría usarse para manejar errores globales como tokens expirados
+   * Configuración de interceptor para respuestas HTTP
+   * 
+   * Este interceptor se ejecuta después de cada respuesta HTTP y maneja:
+   * - Logging de respuestas exitosas en desarrollo
+   * - Manejo global de errores de autenticación (401)
+   * - Logout automático cuando el token expira
+   * - Logging de errores para debugging
+   * 
+   * @param {Object} response - Respuesta exitosa de Axios
+   * @returns {Object} Respuesta sin modificaciones
+   * 
+   * @param {Object} error - Error de respuesta HTTP
+   * @throws {Error} Re-lanza el error después del manejo
    */
   axios.interceptors.response.use(
     response => {
-      console.log('✅ [DEBUG] Axios Response Interceptor:')
-      console.log('✅ [DEBUG] Status:', response.status)
-      console.log('✅ [DEBUG] URL:', response.config.url)
-      console.log('✅ [DEBUG] Data:', response.data)
       // Retornar la respuesta sin modificaciones si es exitosa
       return response
     },
     error => {
-      console.error('💥 [DEBUG] Axios Response Error:')
-      console.error('💥 [DEBUG] Status:', error.response?.status)
-      console.error('💥 [DEBUG] URL:', error.config?.url)
-      console.error('💥 [DEBUG] Error data:', error.response?.data)
-      console.error('💥 [DEBUG] Full error:', error)
-      
-      // Manejar errores de respuesta globalmente
+      // Manejar errores de autenticación globalmente
       if (error.response?.status === 401) {
-        console.log('🔒 [DEBUG] 401 Error - Logging out user')
-        // Token expirado o inválido - limpiar sesión
+        
+        /**
+         * Token expirado o inválido - limpiar sesión
+         * 
+         * Cuando recibimos un error 401, significa que:
+         * - El token ha expirado
+         * - El token es inválido
+         * - El usuario no tiene permisos
+         * 
+         * En todos estos casos, la mejor práctica es hacer logout
+         * automático para limpiar el estado y redirigir al login.
+         */
         authStore.logout()
       }
       
+      // Re-lanzar el error para que los componentes puedan manejarlo
       return Promise.reject(error)
     }
   )
+  
+  /**
+   * NOTAS DE DESARROLLO:
+   * 
+   * 1. INTERCEPTORES DE AXIOS:
+   *    - Los interceptores se configuran una sola vez al inicializar la app
+   *    - Se aplican automáticamente a todas las peticiones HTTP
+   *    - Centralizan la lógica de autenticación y manejo de errores
+   * 
+   * 2. MANEJO DE TOKENS:
+   *    - Los tokens se almacenan en localStorage
+   *    - Se agregan automáticamente a cada petición
+   *    - Se validan en cada respuesta 401
+   * 
+   * 3. DEBUGGING:
+   *    - Los console.log se pueden remover en producción
+   *    - Ayudan a debuggear problemas de comunicación con la API
+   *    - Muestran el flujo completo de peticiones y respuestas
+   * 
+   * 4. SEGURIDAD:
+   *    - Los tokens nunca se exponen en URLs
+   *    - Se usan headers Authorization estándar
+   *    - Se limpian automáticamente en caso de expiración
+   */
 })
 </script>
 
 <!--
 /**
- * Estilos globales de la aplicación
- * Define la apariencia base y variables CSS para toda la aplicación
+ * @section Estilos Globales de la Aplicación
+ * @description Define la apariencia base, variables CSS y estilos globales para toda la aplicación
+ * 
+ * Este archivo contiene:
+ * - Tipografía base y renderizado de fuentes
+ * - Variables CSS del sistema de diseño
+ * - Estilos para modo oscuro/claro
+ * - Reset y normalización de estilos
+ * - Clases utilitarias personalizadas
+ * - Animaciones y transiciones
+ * - Estilos para impresión
  */
 -->
 <style>
+/* ============================================================================
+ * ESTILOS BASE DE LA APLICACIÓN
+ * ============================================================================ */
+
 /**
- * Estilos para el contenedor principal de la aplicación
- * Establece la tipografía base y propiedades de renderizado
+ * Contenedor principal de la aplicación
+ * Establece la tipografía base y propiedades de renderizado optimizadas
  */
 #app {
-  /* Pila de fuentes optimizada para legibilidad y compatibilidad */
+  /* Pila de fuentes optimizada para legibilidad y compatibilidad cross-platform */
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Suavizado de fuentes para mejor renderizado */
+  /* Suavizado de fuentes para mejor renderizado en pantallas de alta densidad */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   
@@ -175,136 +290,187 @@ onMounted(async () => {
  * Ajusta los colores cuando el usuario prefiere el tema oscuro
  */
 .dark #app {
-  /* Color de texto optimizado para fondos oscuros */
+  /* Color de texto optimizado para fondos oscuros con buen contraste */
   color: #e2e8f0;
 }
 
+/* ============================================================================
+ * VARIABLES CSS DEL SISTEMA DE DISEÑO
+ * ============================================================================ */
+
 /**
  * Variables CSS personalizadas para el sistema de diseño
- * Facilita el mantenimiento y consistencia visual
+ * Facilita el mantenimiento, consistencia visual y escalabilidad
+ * 
+ * Estas variables se usan en toda la aplicación para mantener
+ * coherencia en colores, espaciado, sombras y transiciones
  */
 :root {
-  /* Colores primarios */
-  --color-primary: #4f46e5;
-  --color-primary-dark: #3730a3;
+  /* === PALETA DE COLORES === */
+  /* Colores primarios de la marca */
+  --color-primary: #4f46e5;        /* Índigo principal */
+  --color-primary-dark: #3730a3;   /* Índigo oscuro para hover/active */
   
-  /* Colores de estado */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* Colores de estado para feedback visual */
+  --color-success: #10b981;        /* Verde para éxito */
+  --color-warning: #f59e0b;        /* Amarillo para advertencias */
+  --color-error: #ef4444;          /* Rojo para errores */
   
-  /* Espaciado base */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+  /* === SISTEMA DE ESPACIADO === */
+  /* Basado en múltiplos de 0.25rem (4px) para consistencia */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
   
-  /* Bordes redondeados */
-  --border-radius-sm: 0.25rem;
-  --border-radius-md: 0.375rem;
-  --border-radius-lg: 0.5rem;
+  /* === BORDES REDONDEADOS === */
+  /* Progresión suave para diferentes elementos */
+  --border-radius-sm: 0.25rem;  /* 4px - botones pequeños */
+  --border-radius-md: 0.375rem; /* 6px - inputs, cards */
+  --border-radius-lg: 0.5rem;   /* 8px - modales, containers */
   
-  /* Sombras */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* === SISTEMA DE SOMBRAS === */
+  /* Elevación progresiva para jerarquía visual */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);      /* Sombra sutil */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);     /* Sombra media */
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);   /* Sombra pronunciada */
   
-  /* Transiciones */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 200ms ease-in-out;
-  --transition-slow: 300ms ease-in-out;
+  /* === TRANSICIONES === */
+  /* Duraciones estándar para animaciones fluidas */
+  --transition-fast: 150ms ease-in-out;    /* Micro-interacciones */
+  --transition-normal: 200ms ease-in-out;  /* Transiciones estándar */
+  --transition-slow: 300ms ease-in-out;    /* Animaciones complejas */
 }
 
 /**
- * Variables para modo oscuro
- * Redefine colores para mejor contraste en temas oscuros
+ * Variables específicas para modo oscuro
+ * Redefine colores para mejor contraste y legibilidad en temas oscuros
  */
 .dark {
-  --color-primary: #6366f1;
-  --color-primary-dark: #4338ca;
+  /* Ajuste de colores primarios para mejor visibilidad en fondos oscuros */
+  --color-primary: #6366f1;        /* Índigo más claro */
+  --color-primary-dark: #4338ca;   /* Índigo medio para contraste */
 }
 
+/* ============================================================================
+ * RESET Y NORMALIZACIÓN DE ESTILOS
+ * ============================================================================ */
+
 /**
- * Estilos de reset y normalización
- * Asegura consistencia entre navegadores
+ * Reset universal para box-sizing
+ * Asegura que padding y border se incluyan en el ancho/alto total
+ * Mejora la predictibilidad del layout
  */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+/* ============================================================================
+ * ESTILOS PARA FORMULARIOS Y ACCESIBILIDAD
+ * ============================================================================ */
+
 /**
- * Estilos para elementos de formulario
- * Mejora la accesibilidad y experiencia de usuario
+ * Normalización de elementos de formulario
+ * Asegura herencia de tipografía y comportamiento consistente
  */
 input, textarea, select {
-  /* Hereda la fuente del contenedor padre */
+  /* Hereda la fuente del contenedor padre para consistencia visual */
   font-family: inherit;
 }
 
 /**
- * Estilos para elementos de enfoque
- * Mejora la accesibilidad para navegación por teclado
+ * Estilos de enfoque para accesibilidad
+ * Proporciona indicadores visuales claros para navegación por teclado
+ * Cumple con las pautas WCAG para contraste y visibilidad
  */
 :focus {
+  /* Outline visible con color de marca y separación adecuada */
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /**
  * Estilos para elementos deshabilitados
- * Proporciona feedback visual claro
+ * Proporciona feedback visual claro sobre la interactividad
  */
 :disabled {
+  /* Reduce opacidad para indicar estado inactivo */
   opacity: 0.6;
+  /* Cursor que indica que el elemento no es interactivo */
   cursor: not-allowed;
 }
 
+/* ============================================================================
+ * SCROLLBARS PERSONALIZADOS
+ * ============================================================================ */
+
 /**
- * Estilos para scrollbars personalizados (Webkit)
- * Mejora la apariencia en navegadores compatibles
+ * Scrollbars personalizados para navegadores Webkit (Chrome, Safari, Edge)
+ * Mejora la apariencia visual y mantiene consistencia con el diseño
  */
 ::-webkit-scrollbar {
+  /* Tamaño compacto para no interferir con el contenido */
   width: 8px;
   height: 8px;
 }
 
+/**
+ * Track (fondo) del scrollbar para modo claro
+ */
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Scrollbars para modo oscuro */
-.dark ::-webkit-scrollbar-track {
-  background: #1e293b;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #f1f5f9;  /* Gris muy claro */
 }
 
 /**
- * Clases utilitarias personalizadas
- * Complementan las clases de Tailwind CSS
+ * Thumb (indicador) del scrollbar para modo claro
  */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;   /* Gris medio */
+  border-radius: 4px;    /* Bordes redondeados */
+}
+
+/**
+ * Estado hover del thumb para mejor interactividad
+ */
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;   /* Gris más oscuro en hover */
+}
+
+/**
+ * Scrollbars para modo oscuro
+ * Colores adaptados para mejor contraste en fondos oscuros
+ */
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;   /* Gris oscuro */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;   /* Gris medio oscuro */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;   /* Gris claro en hover */
+}
+
+/* ============================================================================
+ * CLASES UTILITARIAS PERSONALIZADAS
+ * ============================================================================ */
+
+/**
+ * Clases utilitarias para truncamiento de texto
+ * Complementan las clases de Tailwind CSS con funcionalidades específicas
+ * Útiles para mantener layouts consistentes con contenido variable
+ */
+
+/* Truncamiento en una sola línea con puntos suspensivos */
 .text-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Truncamiento a 2 líneas usando line-clamp */
 .text-truncate-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -312,6 +478,7 @@ input, textarea, select {
   overflow: hidden;
 }
 
+/* Truncamiento a 3 líneas usando line-clamp */
 .text-truncate-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -319,14 +486,18 @@ input, textarea, select {
   overflow: hidden;
 }
 
+/* ============================================================================
+ * ANIMACIONES Y TRANSICIONES PERSONALIZADAS
+ * ============================================================================ */
+
 /**
- * Animaciones personalizadas
- * Mejora la experiencia visual de la aplicación
+ * Animación de aparición suave (fade in)
+ * Útil para elementos que aparecen dinámicamente
  */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px);  /* Ligero movimiento vertical */
   }
   to {
     opacity: 1;
@@ -334,6 +505,10 @@ input, textarea, select {
   }
 }
 
+/**
+ * Animación de deslizamiento horizontal
+ * Ideal para menús laterales y elementos que entran desde el lado
+ */
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
@@ -343,6 +518,10 @@ input, textarea, select {
   }
 }
 
+/**
+ * Clases para aplicar animaciones
+ * Usan las variables CSS de transición para consistencia
+ */
 .fade-in {
   animation: fadeIn var(--transition-normal) ease-out;
 }
@@ -351,19 +530,31 @@ input, textarea, select {
   animation: slideIn var(--transition-normal) ease-out;
 }
 
+/* ============================================================================
+ * ESTILOS PARA IMPRESIÓN
+ * ============================================================================ */
+
 /**
- * Estilos para impresión
- * Optimiza la apariencia cuando se imprime la página
+ * Media query para optimizar la apariencia en impresión
+ * Asegura legibilidad y ahorra tinta al imprimir
  */
 @media print {
+  /* Forzar colores de alto contraste para impresión */
   #app {
     color: black !important;
     background: white !important;
   }
   
-  /* Ocultar elementos no necesarios en impresión */
+  /* Ocultar elementos de navegación y elementos marcados como no imprimibles */
   nav, .no-print {
     display: none !important;
+  }
+  
+  /* Optimizaciones adicionales para impresión */
+  * {
+    /* Evitar que los elementos se rompan entre páginas */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 </style>

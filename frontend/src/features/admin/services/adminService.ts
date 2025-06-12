@@ -325,11 +325,11 @@ class AdminService {
    * return this.handleError(error, 'Error al procesar solicitud')
    * ```
    */
-  private handleError(error: any, defaultMessage: string): { success: false; error: string; data: null } {
+  private handleError(error: unknown, defaultMessage: string): { success: false; error: string; data: null } {
     const processedError = processError(error)
     
     // Maneja errores de autenticación específicamente
-    if (error.response?.status === 401) {
+    if ((error as any).response?.status === 401) {
       handleAuthError(error, true)
     }
     

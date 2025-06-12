@@ -1,3 +1,58 @@
+<!--
+/**
+ * @file MessageDetailView.vue
+ * @description Vista detallada de una conversación de mensajes en Ecommunitas
+ * 
+ * Este componente proporciona una interfaz completa para visualizar y gestionar
+ * una conversación específica entre usuarios. Incluye el historial de mensajes,
+ * información del usuario con quien se conversa, y funcionalidades para enviar
+ * nuevos mensajes en tiempo real.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 💬 Visualización completa del historial de mensajes
+ * - 👤 Información del usuario participante
+ * - ⚡ Mensajería en tiempo real
+ * - 📱 Interfaz responsive y accesible
+ * - 🌙 Soporte para modo oscuro
+ * - 🔄 Estados de carga y error
+ * - 📎 Soporte para archivos adjuntos
+ * 
+ * FUNCIONALIDADES:
+ * - Carga y visualización del historial de mensajes
+ * - Envío de nuevos mensajes
+ * - Marcado automático de mensajes como leídos
+ * - Scroll automático a mensajes nuevos
+ * - Indicadores de estado de mensajes
+ * - Gestión de errores de envío
+ * - Reintento automático de mensajes fallidos
+ * 
+ * ESTADOS MANEJADOS:
+ * - Carga inicial de la conversación
+ * - Error en la obtención de mensajes
+ * - Estado de envío de mensajes
+ * - Conexión en tiempo real
+ * - Estados de lectura de mensajes
+ * 
+ * INTEGRACIÓN:
+ * - Store de mensajes para gestión de datos
+ * - Store de autenticación para usuario actual
+ * - WebSocket para mensajería en tiempo real
+ * - Sistema de notificaciones
+ * - Gestión de archivos adjuntos
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Vue Router para navegación
+ * - Pinia para gestión de estado
+ * - Socket.io para tiempo real
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

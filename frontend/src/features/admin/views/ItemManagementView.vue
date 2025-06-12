@@ -1,3 +1,73 @@
+<!--
+/**
+ * @file ItemManagementView.vue
+ * @description Vista de administración para gestión de artículos en Ecommunitas
+ * 
+ * Esta vista proporciona una interfaz completa para que los usuarios administren
+ * sus artículos publicados. Permite crear nuevos artículos, editar los existentes,
+ * cambiar su disponibilidad y eliminarlos. Es el centro de control principal
+ * para la gestión de contenido del usuario.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📝 Gestión completa de artículos del usuario
+ * - ➕ Creación de nuevos artículos
+ * - ✏️ Edición de artículos existentes
+ * - 🗑️ Eliminación de artículos
+ * - 👁️ Visualización de estado y disponibilidad
+ * - 🔄 Actualización en tiempo real
+ * - 📊 Vista organizada y funcional
+ * - 🎨 Interfaz intuitiva y responsive
+ * 
+ * FUNCIONALIDADES:
+ * - Listado de todos los artículos del usuario
+ * - Botón prominente para crear nuevos artículos
+ * - Integración con componente ItemManagement
+ * - Manejo de eventos de actualización y eliminación
+ * - Navegación fluida entre vistas
+ * - Feedback visual de acciones realizadas
+ * - Confirmaciones para acciones destructivas
+ * 
+ * ACCIONES DISPONIBLES:
+ * - Crear nuevo artículo: Redirige al formulario de creación
+ * - Editar artículo: Abre modal o vista de edición
+ * - Eliminar artículo: Con confirmación de seguridad
+ * - Cambiar disponibilidad: Toggle rápido de estado
+ * - Ver detalles: Navegación a vista detallada
+ * 
+ * EVENTOS MANEJADOS:
+ * @event item-updated - Cuando se actualiza un artículo
+ * @event item-deleted - Cuando se elimina un artículo
+ * 
+ * NAVEGACIÓN:
+ * - Botón "Crear nuevo ítem": Redirige a /items/new
+ * - Enlaces a edición y detalles de artículos
+ * - Breadcrumbs para navegación contextual
+ * - Integración con sistema de rutas
+ * 
+ * INTEGRACIÓN:
+ * - Componente ItemManagement para funcionalidad principal
+ * - Composable useItemManagement para lógica de negocio
+ * - Sistema de rutas de Vue Router
+ * - Store de artículos para gestión de estado
+ * 
+ * COMPOSABLES UTILIZADOS:
+ * - useItemManagement: Lógica principal de gestión
+ * - Funciones de manejo de eventos
+ * - Inicialización de componente
+ * - Gestión de estado reactivo
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - Vue Router para navegación
+ * - Tailwind CSS para estilos
+ * - Componentes reutilizables
+ * - Composables personalizados
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
@@ -38,5 +108,5 @@ const {
   
   // Función de inicialización
   initializeComponent
-} = useItemManagement()}]}}}
+} = useItemManagement()
 </script>

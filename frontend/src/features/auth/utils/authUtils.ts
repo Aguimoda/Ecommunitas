@@ -55,7 +55,7 @@ export function getCurrentUser(): User | null {
     const userStr = localStorage.getItem('user')
     return userStr ? JSON.parse(userStr) : null
   } catch (error) {
-    console.error('Error parsing user from localStorage:', error)
+    // Error parsing user data - return null for invalid data
     return null
   }
 }
@@ -226,7 +226,7 @@ export function getTokenExpiration(token: string): Date | null {
     const payload = JSON.parse(atob(token.split('.')[1]))
     return payload.exp ? new Date(payload.exp * 1000) : null
   } catch (error) {
-    console.error('Error parsing token:', error)
+    // Error parsing token - return null for invalid token
     return null
   }
 }

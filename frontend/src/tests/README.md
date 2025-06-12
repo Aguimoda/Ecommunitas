@@ -1,6 +1,16 @@
-# Tests
+# Tests de Ecommunitas Frontend
 
-Esta carpeta contiene todos los tests unitarios y de integración para la aplicación Ecommunitas.
+**Documentación completa del sistema de testing para la aplicación Ecommunitas**
+
+Esta carpeta contiene todos los tests unitarios, de integración y end-to-end para la aplicación Ecommunitas. El sistema de testing está diseñado para garantizar la calidad, estabilidad y mantenibilidad del código frontend.
+
+## 🎯 Objetivos del Testing
+
+- **Calidad del Código**: Garantizar que todas las funcionalidades trabajen correctamente
+- **Prevención de Regresiones**: Detectar errores antes de que lleguen a producción
+- **Documentación Viva**: Los tests sirven como documentación del comportamiento esperado
+- **Refactoring Seguro**: Permitir cambios en el código con confianza
+- **Desarrollo Ágil**: Facilitar el desarrollo iterativo y la integración continua
 
 ## Estructura
 

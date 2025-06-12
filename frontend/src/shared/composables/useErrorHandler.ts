@@ -1,7 +1,62 @@
 /**
- * Shared Error Handler Composable
- * Centralizes error handling logic across the application
- * Provides consistent error messaging and logging
+ * @file useErrorHandler.ts
+ * @description Composable para manejo centralizado de errores en Ecommunitas
+ * 
+ * Este composable proporciona una solución unificada para el manejo de errores
+ * en toda la aplicación, incluyendo errores de API, errores de red y errores
+ * personalizados. Ofrece notificaciones consistentes y logging estructurado.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🚨 Manejo centralizado de errores de API
+ * - 📡 Gestión de errores de red y conectividad
+ * - 🔔 Notificaciones toast personalizadas por tipo de error
+ * - 📊 Logging estructurado para debugging
+ * - 🔄 Manejo automático de tokens expirados
+ * - 🎯 Mensajes de error específicos por código HTTP
+ * - 💾 Almacenamiento del último error para referencia
+ * 
+ * FUNCIONALIDADES:
+ * - Procesamiento inteligente de respuestas de error HTTP
+ * - Mensajes localizados en español
+ * - Limpieza automática de tokens inválidos
+ * - Notificaciones de éxito, información y advertencia
+ * - Creación de objetos de error estandarizados
+ * - Contexto opcional para mejor trazabilidad
+ * 
+ * CASOS DE USO:
+ * - Manejo de errores en llamadas a API
+ * - Validación de formularios
+ * - Notificaciones de estado de operaciones
+ * - Debugging y monitoreo de errores
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Vue Toastification para notificaciones
+ * - Manejo de localStorage para tokens
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico en un componente
+ * const { displayError, displaySuccess, handleApiError } = useErrorHandler()
+ * 
+ * // Manejo de error de API
+ * try {
+ *   await apiCall()
+ * } catch (error) {
+ *   handleApiError(error, 'Operación de usuario')
+ * }
+ * 
+ * // Mostrar mensaje de éxito
+ * displaySuccess('Operación completada exitosamente')
+ * 
+ * // Mostrar error personalizado
+ * displayError('Error personalizado', 'contexto-específico')
+ * ```
  */
 
 import { ref } from 'vue'

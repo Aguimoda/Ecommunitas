@@ -373,7 +373,7 @@ class MessageService {
    */
   async markConversationAsRead(conversationId: string): Promise<void> {
     try {
-      await axios.patch(
+      await axios.put(
         MESSAGE_ROUTES.MARK_CONVERSATION_READ(conversationId)
       )
     } catch (error: any) {

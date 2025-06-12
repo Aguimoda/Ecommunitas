@@ -1,3 +1,61 @@
+<!--
+/**
+ * @file MessageList.vue
+ * @description Componente para mostrar la lista de conversaciones de mensajes
+ * 
+ * Este componente renderiza una lista de todas las conversaciones del usuario,
+ * mostrando información relevante como el último mensaje, estado de lectura,
+ * avatar del contacto y timestamp. Proporciona navegación directa a cada
+ * conversación individual.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📋 Lista completa de conversaciones
+ * - 👤 Información de contactos con avatares
+ * - 💬 Preview del último mensaje
+ * - 🔔 Indicadores de mensajes no leídos
+ * - ⏰ Timestamps relativos
+ * - 📱 Diseño responsive
+ * - 🔄 Estados de carga y error
+ * 
+ * FUNCIONALIDADES:
+ * - Visualización de todas las conversaciones activas
+ * - Navegación a conversaciones específicas
+ * - Indicadores visuales de mensajes no leídos
+ * - Estados de entrega de mensajes
+ * - Ordenamiento por actividad reciente
+ * - Búsqueda y filtrado de conversaciones
+ * - Gestión de estados vacíos
+ * 
+ * INFORMACIÓN MOSTRADA:
+ * - Nombre y avatar del contacto
+ * - Último mensaje de la conversación
+ * - Fecha/hora del último mensaje
+ * - Contador de mensajes no leídos
+ * - Estado de entrega del último mensaje
+ * - Indicador de conversación activa
+ * 
+ * PROPS RECIBIDAS:
+ * - conversations: Array de conversaciones
+ * - loading: Estado de carga
+ * - error: Mensaje de error si existe
+ * - selectedConversation: Conversación actualmente seleccionada
+ * 
+ * EVENTOS EMITIDOS:
+ * - selectConversation: Conversación seleccionada
+ * - markAsRead: Marcar conversación como leída
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Vue Router para navegación
+ * - Formateo de fechas
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="message-list">
     <h2 class="text-xl font-semibold mb-4">Mensajes</h2>

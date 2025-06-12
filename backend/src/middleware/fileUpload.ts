@@ -1,12 +1,45 @@
+/**
+ * @file fileUpload.ts
+ * @description Middleware para manejo de subida de archivos
+ * @module Middleware/FileUpload
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este middleware proporciona:
+ * - Configuración de express-fileupload
+ * - Creación automática de directorios de subida
+ * - Límites de tamaño de archivo
+ * - Servicio de archivos estáticos
+ * - Manejo de archivos temporales
+ * - Configuración de debug para desarrollo
+ */
+
 import fileUpload from 'express-fileupload';
 import fs from 'fs';
 import path from 'path';
 import express, { Application } from 'express';
 
 /**
- * Middleware for handling file uploads
- * Configures express-fileupload with appropriate settings
- * Creates upload directory if it doesn't exist
+ * Middleware para configurar la subida de archivos
+ * 
+ * @function fileUploadMiddleware
+ * @param {Application} app - Instancia de la aplicación Express
+ * 
+ * @description
+ * Configura express-fileupload con las siguientes características:
+ * - Límite de 5MB por archivo
+ * - Creación automática de directorios padre
+ * - Uso de archivos temporales para mejor rendimiento
+ * - Servicio de archivos estáticos desde el directorio de subidas
+ * - Debug habilitado en modo desarrollo
+ * 
+ * @example
+ * ```typescript
+ * // En server.ts
+ * import fileUploadMiddleware from './middleware/fileUpload';
+ * fileUploadMiddleware(app);
+ * ```
  */
 const fileUploadMiddleware = (app: Application) => {
   // Create upload directory if it doesn't exist

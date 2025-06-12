@@ -1,3 +1,21 @@
+/**
+ * @file advancedResults.ts
+ * @description Middleware para resultados avanzados con paginación, filtrado y ordenamiento
+ * @module Middleware/AdvancedResults
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este middleware proporciona:
+ * - Paginación automática de resultados
+ * - Filtrado avanzado por múltiples campos
+ * - Ordenamiento personalizable
+ * - Selección de campos específicos
+ * - Búsqueda con operadores de comparación
+ * - Población de referencias de Mongoose
+ * - Metadatos de paginación completos
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { Model, Document } from 'mongoose';
 
@@ -33,6 +51,34 @@ interface QueryRequest extends Request {
   };
 }
 
+/**
+ * Middleware de resultados avanzados para consultas de Mongoose
+ * 
+ * @function advancedResults
+ * @param {Model<any>} model - Modelo de Mongoose para realizar la consulta
+ * @param {string|object} populate - Campo(s) a poblar en la consulta (opcional)
+ * @returns {Function} Middleware de Express que procesa la consulta
+ * 
+ * @description
+ * Características principales:
+ * - Filtrado automático por parámetros de query
+ * - Soporte para operadores de comparación ($gt, $gte, $lt, $lte, $in)
+ * - Paginación con metadatos completos
+ * - Ordenamiento flexible con alias predefinidos
+ * - Selección de campos específicos
+ * - Población automática de referencias
+ * 
+ * @example
+ * ```typescript
+ * // En una ruta
+ * router.get('/items', advancedResults(Item, 'user'), getItems);
+ * 
+ * // Query examples:
+ * // GET /items?page=2&limit=10&sort=recent
+ * // GET /items?category=electronics&condition=new
+ * // GET /items?price[gte]=100&price[lte]=500
+ * ```
+ */
 const advancedResults = (model: Model<any>, populate?: string | object) => async (
   req: QueryRequest,
   res: AdvancedResultsResponse,

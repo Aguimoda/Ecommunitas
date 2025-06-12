@@ -1,13 +1,65 @@
 /**
- * Utilidades de traducción para categorías y condiciones
- * Este archivo centraliza todas las traducciones para mantener consistencia
+ * @fileoverview Utilidades de traducción tipadas para categorías y condiciones
+ * @description Sistema centralizado de traducciones con TypeScript para mantener consistencia
+ * en la interfaz de usuario, proporcionando traducciones tipadas para categorías de artículos,
+ * condiciones de estado y funciones auxiliares para la internacionalización.
+ * 
+ * @features
+ * - Traducciones centralizadas con tipos TypeScript
+ * - Traducciones de condiciones de artículos
+ * - Funciones de traducción con fallbacks tipados
+ * - Validación de claves de traducción en tiempo de compilación
+ * - Soporte para valores nulos/indefinidos
+ * - Consistencia y seguridad de tipos
+ * 
+ * @technical
+ * - TypeScript con tipos estrictos
+ * - Record types para mapeos
+ * - Union types para claves válidas
+ * - Funciones puras con tipado
+ * - Manejo de casos edge tipado
+ * - Fallbacks seguros
+ * 
+ * @types
+ * - CategoryKey: Claves válidas para categorías
+ * - ConditionKey: Claves válidas para condiciones
+ * 
+ * @categories
+ * - books: Libros
+ * - electronics: Electrónicos
+ * - clothing: Ropa
+ * - furniture: Muebles
+ * - other: Otros
+ * 
+ * @conditions
+ * - new: Nuevo
+ * - like_new: Como nuevo
+ * - good: Buen estado
+ * - fair: Estado aceptable
+ * - poor: Estado regular
+ * 
+ * @author Equipo Ecommunitas
+ * @version 1.0.0
+ * @since 2024
  */
 
-// Tipos para las traducciones
+/**
+ * Claves válidas para categorías de artículos
+ * @typedef {('books'|'electronics'|'clothing'|'furniture'|'other')} CategoryKey
+ */
 type CategoryKey = 'books' | 'electronics' | 'clothing' | 'furniture' | 'other'
+
+/**
+ * Claves válidas para condiciones de artículos
+ * @typedef {('new'|'like_new'|'good'|'fair'|'poor')} ConditionKey
+ */
 type ConditionKey = 'new' | 'like_new' | 'good' | 'fair' | 'poor'
 
-// Traducciones de categorías
+/**
+ * Traducciones tipadas de categorías de artículos
+ * @type {Record<CategoryKey, string>}
+ * @description Mapeo tipado de claves de categorías a sus traducciones en español
+ */
 export const categoryTranslations: Record<CategoryKey, string> = {
   books: 'Libros',
   electronics: 'Electrónicos',
@@ -16,7 +68,11 @@ export const categoryTranslations: Record<CategoryKey, string> = {
   other: 'Otros'
 }
 
-// Traducciones de condiciones
+/**
+ * Traducciones tipadas de condiciones de artículos
+ * @type {Record<ConditionKey, string>}
+ * @description Mapeo tipado de claves de condiciones a sus traducciones en español
+ */
 export const conditionTranslations: Record<ConditionKey, string> = {
   new: 'Nuevo',
   like_new: 'Como nuevo',
@@ -25,13 +81,33 @@ export const conditionTranslations: Record<ConditionKey, string> = {
   poor: 'Estado regular'
 }
 
-// Función para traducir categorías
+/**
+ * Traduce una clave de categoría a su texto en español con tipado
+ * @param {string|null|undefined} category - Clave de la categoría a traducir
+ * @returns {string} Texto traducido de la categoría o fallback
+ * @description Proporciona traducción segura con fallback para categorías no encontradas
+ * 
+ * @example
+ * translateCategory('books') // 'Libros'
+ * translateCategory('invalid') // 'invalid'
+ * translateCategory(null) // 'Sin categoría'
+ */
 export const translateCategory = (category: string | null | undefined): string => {
   if (!category) return 'Sin categoría'
   return categoryTranslations[category as CategoryKey] || category
 }
 
-// Función para traducir condiciones
+/**
+ * Traduce una clave de condición a su texto en español con tipado
+ * @param {string|null|undefined} condition - Clave de la condición a traducir
+ * @returns {string} Texto traducido de la condición o fallback
+ * @description Proporciona traducción segura con fallback para condiciones no encontradas
+ * 
+ * @example
+ * translateCondition('new') // 'Nuevo'
+ * translateCondition('invalid') // 'invalid'
+ * translateCondition(null) // 'Sin condición'
+ */
 export const translateCondition = (condition: string | null | undefined): string => {
   if (!condition) return 'Sin condición'
   return conditionTranslations[condition as ConditionKey] || condition

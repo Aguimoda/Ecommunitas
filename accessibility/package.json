@@ -1,0 +1,32 @@
+{
+  "name": "ecommunitas-accessibility-tests",
+  "version": "1.0.0",
+  "description": "Pruebas de accesibilidad para Ecommunitas usando axe-core y Playwright",
+  "main": "accessibility.test.js",
+  "scripts": {
+    "test": "playwright test accessibility.test.js",
+    "test:headed": "playwright test accessibility.test.js --headed",
+    "test:ui": "playwright test accessibility.test.js --ui",
+    "test:report": "playwright show-report",
+    "install:browsers": "playwright install"
+  },
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "testing",
+    "playwright",
+    "axe-core",
+    "wcag",
+    "ecommunitas"
+  ],
+  "author": "Ecommunitas Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@axe-core/playwright": "^4.8.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

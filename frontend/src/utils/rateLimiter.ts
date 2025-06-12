@@ -1,18 +1,51 @@
-import axios from 'axios'
+/**
+ * @file rateLimiter.ts
+ * @description Utilidad para limitar la velocidad de peticiones HTTP en el frontend
+ * @module Utils/RateLimiter
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona funcionalidades para:
+ * - Limitar el número de peticiones por período de tiempo
+ * - Gestionar colas de peticiones cuando se alcanza el límite
+ * - Manejar respuestas 429 (Too Many Requests) del servidor
+ * - Reintentar automáticamente peticiones después del período de espera
+ * - Mostrar notificaciones al usuario cuando se activa el rate limiting
+ */
+
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ref } from 'vue'
 import { displayError } from '@/shared/utils/errorHandler'
 
+/**
+ * Configuración para el rate limiter
+ * 
+ * @interface RateLimitConfig
+ */
 type RateLimitConfig = {
+  /** Número máximo de peticiones permitidas */
   maxRequests: number
+  /** Período de tiempo en milisegundos para el límite */
   perMilliseconds: number
+  /** Nombre del header que contiene el tiempo de reintento (opcional) */
   retryAfterHeader?: string
+  /** Callback ejecutado cuando se activa el rate limiting (opcional) */
   onRateLimited?: () => void
 }
 
+/**
+ * Estructura de una petición en cola
+ * 
+ * @interface QueuedRequest
+ */
 type QueuedRequest = {
-  config: any
-  resolve: (value: any) => void
-  reject: (reason?: any) => void
+  /** Configuración de la petición Axios */
+  config: AxiosRequestConfig
+  /** Función para resolver la promesa */
+  resolve: (value: AxiosResponse) => void
+  /** Función para rechazar la promesa */
+  reject: (reason?: unknown) => void
 }
 
 // const toast = useToast()
@@ -70,7 +103,7 @@ const rateLimiter = (config: RateLimitConfig) => {
   }
   
   return {
-    request: async (config: any) => {
+    request: async (config: AxiosRequestConfig) => {
       return new Promise((resolve, reject) => {
         queue.push({ config, resolve, reject })
         processQueue()

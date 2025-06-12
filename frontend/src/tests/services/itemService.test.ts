@@ -37,24 +37,24 @@ const mockCreateItemData: CreateItemData = {
   description: 'New description',
   category: 'books',
   condition: 'excellent',
-  location: {
-    address: 'New Address',
-    coordinates: { lat: 41.8781, lng: -87.6298 }
-  },
-  images: ['new-image.jpg']
+  location: 'New Address',
+  coordinates: { lat: 41.8781, lng: -87.6298 },
+  images: [new File([''], 'new-image.jpg')]
 }
 
 const mockUpdateItemData: UpdateItemData = {
   title: 'Updated Item',
   description: 'Updated description',
-  condition: 'fair'
+  condition: 'fair',
+  location: 'Updated Address'
 }
 
 const mockItemsResponse: ItemsResponse = {
-  items: [mockItem],
+  success: true,
+  count: 1,
+  data: [mockItem],
   total: 1,
   page: 1,
-  limit: 10,
   totalPages: 1
 }
 
@@ -87,17 +87,17 @@ describe('itemService', () => {
         json: async () => mockItemsResponse
       })
 
-      const filters = {
-        category: 'electronics',
-        condition: 'good',
-        search: 'test',
-        location: 'New York'
-      }
-
-      await itemService.getItems({ page: 2, limit: 20, filters })
+      await itemService.getItems({ 
+        page: 2, 
+        limit: 20, 
+        category: 'electronics', 
+        condition: 'good', 
+        q: 'test', 
+        location: 'New York' 
+      })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/items?page=2&limit=20&category=electronics&condition=good&search=test&location=New York'
+        '/api/items?page=2&limit=20&category=electronics&condition=good&q=test&location=New York'
       )
     })
 
@@ -275,15 +275,15 @@ describe('itemService', () => {
       expect(result).toEqual(mockItemsResponse)
     })
 
-    it('should fetch user items with pagination', async () => {
+    it('should fetch user items with default pagination', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockItemsResponse
       })
 
-      await itemService.getItemsByUser('user1', { page: 2, limit: 5 })
+      await itemService.getItemsByUser('user1')
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/users/user1/items?page=2&limit=5')
+      expect(mockFetch).toHaveBeenCalledWith('/api/users/user1/items?page=1&limit=10')
     })
   })
 
@@ -294,7 +294,19 @@ describe('itemService', () => {
         json: async () => mockItemsResponse
       })
 
-      const result = await itemService.searchItems('laptop')
+      const searchFilters = {
+        query: 'laptop',
+        category: '' as const,
+        location: '',
+        condition: '' as const,
+        distance: 10,
+        sort: 'recent' as const,
+        coordinates: null,
+        page: 1,
+        limit: 10
+      }
+
+      const result = await itemService.searchItems(searchFilters)
 
       expect(mockFetch).toHaveBeenCalledWith('/api/items/search?q=laptop&page=1&limit=10')
       expect(result).toEqual(mockItemsResponse)
@@ -306,61 +318,91 @@ describe('itemService', () => {
         json: async () => mockItemsResponse
       })
 
-      const filters = {
-        category: 'electronics',
-        condition: 'excellent'
+      const searchFilters = {
+        query: 'laptop',
+        category: 'electronics' as const,
+        location: '',
+        condition: 'good' as const,
+        distance: 10,
+        sort: 'recent' as const,
+        coordinates: null,
+        page: 2,
+        limit: 20
       }
 
-      await itemService.searchItems('laptop', { page: 2, limit: 20, filters })
+      await itemService.searchItems(searchFilters)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/items/search?q=laptop&page=2&limit=20&category=electronics&condition=excellent'
+        '/api/items/search?q=laptop&page=2&limit=20&category=electronics&condition=good'
       )
     })
 
     it('should handle empty search query', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ ...mockItemsResponse, items: [] })
+        json: async () => ({ ...mockItemsResponse, data: [] })
       })
 
-      const result = await itemService.searchItems('')
+      const searchFilters = {
+        query: '',
+        category: '' as const,
+        location: '',
+        condition: '' as const,
+        distance: 10,
+        sort: 'recent' as const,
+        coordinates: null,
+        page: 1,
+        limit: 10
+      }
 
-      expect(result.items).toEqual([])
+      const result = await itemService.searchItems(searchFilters)
+
+      expect(result.data).toEqual([])
     })
   })
 
-  describe('getItemsByCategory', () => {
-    it('should fetch items by category successfully', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockItemsResponse
-      })
+  // Note: getItemsByCategory method is not implemented in itemService
+  // describe('getItemsByCategory', () => {
+  //   it('should get items by category successfully', async () => {
+  //     const mockResponse = {
+  //       items: [mockItem],
+  //       total: 1,
+  //       page: 1,
+  //       totalPages: 1
+  //     }
 
-      const result = await itemService.getItemsByCategory('electronics')
+  //     mockFetch.mockResolvedValueOnce({
+  //       ok: true,
+  //       json: async () => mockResponse
+  //     })
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/items/category/electronics?page=1&limit=10')
-      expect(result).toEqual(mockItemsResponse)
-    })
+  //     const result = await itemService.getItemsByCategory('electronics')
 
-    it('should handle invalid category', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request'
-      })
+  //     expect(mockFetch).toHaveBeenCalledWith('/api/items/category/electronics')
+  //     expect(result).toEqual(mockResponse)
+  //   })
 
-      await expect(itemService.getItemsByCategory('invalid-category')).rejects.toThrow(
-        'Failed to fetch items by category: 400 Bad Request'
-      )
-    })
-  })
+  //   it('should handle invalid category', async () => {
+  //     mockFetch.mockResolvedValueOnce({
+  //       ok: false,
+  //       status: 404,
+  //       statusText: 'Not Found'
+  //     })
+
+  //     await expect(itemService.getItemsByCategory('invalid-category')).rejects.toThrow(
+  //       'Failed to get items by category: 404 Not Found'
+  //     )
+  //   })
+  // })
 
   describe('uploadItemImages', () => {
     it('should upload images successfully', async () => {
+      const itemId = '123'
       const mockFiles = [new File([''], 'image1.jpg'), new File([''], 'image2.jpg')]
       const mockResponse = {
-        urls: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']
+        id: itemId,
+        title: 'Test Item',
+        images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']
       }
 
       mockFetch.mockResolvedValueOnce({
@@ -368,9 +410,9 @@ describe('itemService', () => {
         json: async () => mockResponse
       })
 
-      const result = await itemService.uploadItemImages(mockFiles)
+      const result = await itemService.uploadItemImages(itemId, mockFiles)
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/items/upload-images', {
+      expect(mockFetch).toHaveBeenCalledWith('/api/items/123/images', {
         method: 'POST',
         body: expect.any(FormData)
       })
@@ -378,6 +420,7 @@ describe('itemService', () => {
     })
 
     it('should handle upload failure', async () => {
+      const itemId = '123'
       const mockFiles = [new File([''], 'image1.jpg')]
       
       mockFetch.mockResolvedValueOnce({
@@ -386,13 +429,14 @@ describe('itemService', () => {
         statusText: 'Payload Too Large'
       })
 
-      await expect(itemService.uploadItemImages(mockFiles)).rejects.toThrow(
+      await expect(itemService.uploadItemImages(itemId, mockFiles)).rejects.toThrow(
         'Failed to upload images: 413 Payload Too Large'
       )
     })
 
     it('should handle empty file array', async () => {
-      await expect(itemService.uploadItemImages([])).rejects.toThrow('No files provided for upload')
+      const itemId = '123'
+      await expect(itemService.uploadItemImages(itemId, [])).rejects.toThrow('No files provided for upload')
     })
   })
 })

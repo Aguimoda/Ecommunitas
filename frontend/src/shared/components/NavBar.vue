@@ -1,30 +1,44 @@
 <!--
-  COMPONENTE: NavBar.vue
-  PROPÓSITO: Barra de navegación principal de la aplicación Ecommunitas
-  
-  DESCRIPCIÓN:
-  Este componente implementa la barra de navegación principal que aparece en todas las páginas
-  de la aplicación. Proporciona navegación entre secciones, gestión de autenticación de usuarios,
-  modo oscuro/claro, y notificaciones de mensajes no leídos.
-  
-  CARACTERÍSTICAS PRINCIPALES:
-  - Navegación responsive (desktop y móvil)
-  - Soporte para modo oscuro/claro
-  - Menú de usuario con avatar y opciones
-  - Contador de mensajes no leídos
-  - Botones de autenticación (login/registro)
-  - Accesibilidad completa (ARIA labels, roles, etc.)
-  
-  ESTADOS MANEJADOS:
-  - Estado de autenticación del usuario
-  - Visibilidad de menús (móvil y usuario)
-  - Modo de tema (oscuro/claro)
-  - Contador de mensajes no leídos
-  
-  DEPENDENCIAS:
-  - useNavBar composable: Lógica de negocio del navbar
-  - Vue Router: Navegación entre páginas
-  - Tailwind CSS: Estilos y responsive design
+/**
+ * @file NavBar.vue
+ * @description Barra de navegación principal de la aplicación Ecommunitas
+ * 
+ * Este componente implementa la barra de navegación principal que aparece en todas las páginas
+ * de la aplicación. Proporciona navegación entre secciones, gestión de autenticación de usuarios,
+ * modo oscuro/claro, y notificaciones de mensajes no leídos.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🧭 Navegación responsive (desktop y móvil)
+ * - 🌓 Soporte para modo oscuro/claro
+ * - 👤 Menú de usuario con avatar y opciones
+ * - 📬 Contador de mensajes no leídos
+ * - 🔐 Botones de autenticación (login/registro)
+ * - ♿ Accesibilidad completa (ARIA labels, roles, etc.)
+ * 
+ * ESTADOS MANEJADOS:
+ * - Estado de autenticación del usuario
+ * - Visibilidad de menús (móvil y usuario)
+ * - Modo de tema (oscuro/claro)
+ * - Contador de mensajes no leídos
+ * 
+ * FUNCIONALIDADES:
+ * - Navegación entre páginas principales
+ * - Gestión de sesión de usuario
+ * - Alternancia de tema visual
+ * - Notificaciones en tiempo real
+ * - Menú hamburguesa para móviles
+ * - Dropdown de opciones de usuario
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - Vue Router para navegación
+ * - Tailwind CSS para estilos responsive
+ * - TypeScript para tipado estático
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 -->
 <template>
   <!-- Contenedor principal de la barra de navegación -->
@@ -372,11 +386,24 @@
 </template>
 
 <script setup>
+// ============================================================================
+// IMPORTACIONES
+// ============================================================================
+
+// Importaciones de Vue 3 Composition API
 import { watch, onMounted, onUnmounted } from 'vue'
+// Composable personalizado que encapsula toda la lógica del NavBar
 import { useNavBar } from '../composables/useNavBar'
 
-// Usar el composable para toda la lógica del NavBar
-// Este composable encapsula toda la lógica de estado y métodos
+// ============================================================================
+// COMPOSABLE Y ESTADO REACTIVO
+// ============================================================================
+
+/**
+ * Composable que encapsula toda la lógica del NavBar
+ * Proporciona estados reactivos, propiedades computadas y métodos
+ * para manejar la navegación, autenticación y UI del componente
+ */
 const {
   // Estados reactivos del navbar
   showMobileMenu,     // Controla la visibilidad del menú móvil
@@ -400,8 +427,16 @@ const {
   stopMessagePolling  // Detiene el polling de mensajes
 } = useNavBar()
 
-// Función para cerrar el menú de usuario al hacer clic fuera de él
-// Mejora la experiencia de usuario al proporcionar una forma intuitiva de cerrar menús
+// ============================================================================
+// MÉTODOS Y FUNCIONES
+// ============================================================================
+
+/**
+ * Maneja los clics fuera del menú de usuario para cerrarlo automáticamente
+ * Mejora la experiencia de usuario al proporcionar una forma intuitiva de cerrar menús
+ * 
+ * @param {Event} event - Evento de clic del DOM
+ */
 const handleClickOutside = (event) => {
   const userMenuButton = document.getElementById('user-menu-button')
   // Solo cerrar si el menú está abierto y el clic no fue en el botón del menú
@@ -410,7 +445,14 @@ const handleClickOutside = (event) => {
   }
 }
 
-// Lifecycle hooks para eventos del DOM específicos del componente
+// ============================================================================
+// LIFECYCLE HOOKS
+// ============================================================================
+
+/**
+ * Hook de montaje del componente
+ * Configura event listeners y inicializa funcionalidades del navbar
+ */
 onMounted(() => {
   // Agregar listener para clics fuera del menú de usuario
   document.addEventListener('click', handleClickOutside)
@@ -420,15 +462,25 @@ onMounted(() => {
   window.addEventListener('conversationRead', fetchUnreadMessages)
 })
 
-// Limpieza de event listeners al desmontar el componente
-// Previene memory leaks y comportamientos inesperados
+/**
+ * Hook de desmontaje del componente
+ * Limpia event listeners para prevenir memory leaks y comportamientos inesperados
+ */
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('conversationRead', fetchUnreadMessages)
 })
 
-// Watcher para reaccionar a cambios en el estado de autenticación
-// Gestiona automáticamente el polling de mensajes según el estado del usuario
+// ============================================================================
+// WATCHERS
+// ============================================================================
+
+/**
+ * Watcher para reaccionar a cambios en el estado de autenticación
+ * Gestiona automáticamente el polling de mensajes según el estado del usuario
+ * 
+ * @param {boolean} newValue - Nuevo estado de autenticación
+ */
 watch(isAuthenticated, (newValue) => {
   if (newValue) {
     // Usuario autenticado: iniciar polling de mensajes
@@ -442,12 +494,27 @@ watch(isAuthenticated, (newValue) => {
 </script>
 
 <style scoped>
+/* ============================================================================
+ * ESTILOS DEL COMPONENTE NAVBAR
+ * ============================================================================
+ * 
+ * Estilos específicos para el componente de navegación principal.
+ * Incluye ajustes para modo oscuro y mejoras de accesibilidad.
+ */
+
+/* Importación de estilos comunes del proyecto */
 @import '@/assets/styles/common.css';
 
-/* Estilos adicionales si son necesarios */
+/* ============================================================================
+ * AJUSTES PARA MODO OSCURO
+ * ============================================================================ */
+
+/* Ajuste del color del logo en modo oscuro para mejor contraste */
 .dark .text-indigo-600 { 
   color: #818cf8; /* Un tono de índigo más claro para mejor contraste en modo oscuro */
 }
+
+/* Ajuste del color hover del logo en modo oscuro */
 .dark .hover\:text-indigo-500:hover {
   color: #a7a7f0; /* Un tono de índigo aún más claro para hover en modo oscuro */
 }

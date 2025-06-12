@@ -1,8 +1,40 @@
 {
+  "_comment": "Configuración del frontend de Ecommunitas - Plataforma de intercambio comunitario",
+  "_description": {
+    "es": "Frontend para la plataforma Ecommunitas de trueque local y economía circular",
+    "en": "Frontend for Ecommunitas local bartering and circular economy platform",
+    "architecture": "Vue 3 + Vite + Pinia + Tailwind CSS + TypeScript",
+    "features": [
+      "SPA (Single Page Application) con Vue 3 Composition API",
+      "Build tool moderno con Vite para desarrollo rápido",
+      "Estado global con Pinia (Vuex 5)",
+      "Diseño responsive con Tailwind CSS",
+      "Mapas interactivos con Leaflet",
+      "Autenticación JWT con axios interceptors",
+      "Validación de formularios con Zod",
+      "Notificaciones toast elegantes",
+      "Testing con Vitest y Vue Test Utils",
+      "TypeScript para type safety",
+      "Sanitización XSS con DOMPurify",
+      "Routing con Vue Router 4"
+    ],
+    "scripts_guide": {
+      "development": "npm run dev (servidor de desarrollo con HMR)",
+      "production": "npm run build (build optimizado para producción)",
+      "preview": "npm run preview (previsualizar build de producción)",
+      "testing": "npm run test (modo watch) o npm run test:run (single run)"
+    },
+    "performance": {
+      "build_tool": "Vite (extremadamente rápido con HMR)",
+      "bundle_size": "Optimizado con tree-shaking automático",
+      "css_framework": "Tailwind CSS con purging automático",
+      "lazy_loading": "Rutas y componentes con carga diferida"
+    }
+  },
   "name": "ecommunitas-frontend",
   "private": true,
   "version": "1.0.0",
-  "description": "Frontend para la plataforma Ecommunitas de trueque local",
+  "description": "Frontend para la plataforma Ecommunitas de trueque local - Aplicación Vue 3 con Vite, Pinia y Tailwind CSS",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,6 +60,7 @@
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
     "@vitejs/plugin-vue": "^4.3.4",
+    "@vitest/coverage-v8": "^3.2.3",
     "@vitest/ui": "^3.2.2",
     "autoprefixer": "^10.4.15",
     "jsdom": "^26.1.0",
@@ -41,8 +74,23 @@
     "trueque",
     "economía circular",
     "sostenibilidad",
-    "comunidad"
+    "comunidad",
+    "vue3",
+    "vite",
+    "pinia",
+    "tailwindcss",
+    "frontend",
+    "spa"
   ],
-  "author": "",
-  "license": "MIT"
+  "author": "Equipo de Desarrollo Ecommunitas",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }

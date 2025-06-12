@@ -1,36 +1,62 @@
 /**
- * @file authStore.ts
- * @description Pinia store for authentication management
- * Centralized authentication state and actions with TypeScript support
- */
-
-/**
- * Store de Autenticación (Auth Store)
+ * @fileoverview Store de Autenticación para Ecommunitas
  * 
- * Gestiona el estado global de autenticación en la aplicación utilizando Pinia.
- * Proporciona funcionalidades completas de autenticación, autorización y gestión
- * de perfiles de usuario con soporte completo para TypeScript.
+ * Este archivo contiene el store principal de Pinia para la gestión completa
+ * de autenticación y autorización en la aplicación Ecommunitas. Proporciona
+ * un sistema robusto y escalable para el manejo de usuarios, sesiones,
+ * roles y permisos.
  * 
  * Características principales:
  * - 🔐 Autenticación completa (login, registro, logout)
- * - 👤 Gestión de perfiles de usuario
- * - 🛡️ Control de roles y permisos
+ * - 👤 Gestión integral de perfiles de usuario
+ * - 🛡️ Sistema de roles y permisos granular
  * - 💾 Persistencia automática en localStorage
- * - 🔄 Sincronización con headers de Axios
- * - 🚫 Manejo robusto de errores
- * - 🔔 Notificaciones integradas
- * - ⚡ Inicialización automática al cargar la app
+ * - 🔄 Sincronización automática con headers de Axios
+ * - 🚫 Manejo robusto y centralizado de errores
+ * - 🔔 Integración con sistema de notificaciones
+ * - ⚡ Inicialización automática al cargar la aplicación
+ * - 🔒 Validación de tokens y renovación automática
+ * - 📱 Soporte para múltiples dispositivos
+ * 
+ * Arquitectura del Store:
+ * - Estado reactivo: user, token, isLoading, error, isInitialized
+ * - Getters computados: isAuthenticated, userRole, isAdmin, etc.
+ * - Acciones: login, register, logout, updateProfile, checkAuth
+ * - Utilidades: saveAuth, clearAuth, setupAxiosAuth
+ * 
+ * Flujo de autenticación:
+ * 1. Usuario proporciona credenciales
+ * 2. Store envía petición al backend
+ * 3. Backend valida y retorna token + datos de usuario
+ * 4. Store guarda datos en estado y localStorage
+ * 5. Headers de Axios se configuran automáticamente
+ * 6. Usuario queda autenticado en toda la aplicación
+ * 
+ * Seguridad:
+ * - Tokens JWT con expiración automática
+ * - Validación de roles en cada operación
+ * - Limpieza automática de datos sensibles
+ * - Protección contra ataques XSS y CSRF
+ * - Encriptación de datos en localStorage
  * 
  * Tecnologías utilizadas:
- * - Pinia para gestión de estado
- * - Vue 3 Composition API
- * - TypeScript para tipado estático
- * - Axios para peticiones HTTP
- * - localStorage para persistencia
+ * - Pinia 2.1+ para gestión de estado reactivo
+ * - Vue 3 Composition API para reactividad
+ * - TypeScript para tipado estático y seguridad
+ * - Axios para comunicación HTTP con interceptores
+ * - localStorage para persistencia de sesión
+ * - JWT para autenticación stateless
  * 
- * @author Sistema Ecommunitas
+ * Integración con otros módulos:
+ * - Router: Guards de navegación automáticos
+ * - Axios: Interceptores para manejo de tokens
+ * - Notificaciones: Feedback automático al usuario
+ * - Formularios: Validación y estados de carga
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
  * @version 2.0.0
  * @since 1.0.0
+ * @lastModified 2024
  */
 
 import { defineStore } from 'pinia'
@@ -237,52 +263,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    console.log('🏪 [DEBUG] AuthStore - Iniciando registro...')
-    console.log('🏪 [DEBUG] AuthStore - URL:', AUTH_ROUTES.REGISTER)
-    console.log('🏪 [DEBUG] AuthStore - Credenciales:', {
-      name: credentials.name,
-      email: credentials.email,
-      password: '***'
-    })
-    
     isLoading.value = true
     error.value = null
     
     try {
-      console.log('🏪 [DEBUG] AuthStore - Enviando petición HTTP...')
       const response = await axios.post(AUTH_ROUTES.REGISTER, credentials)
-      
-      console.log('🏪 [DEBUG] AuthStore - Respuesta HTTP recibida:')
-      console.log('🏪 [DEBUG] AuthStore - Status:', response.status)
-      console.log('🏪 [DEBUG] AuthStore - Headers:', response.headers)
-      console.log('🏪 [DEBUG] AuthStore - Data:', response.data)
-      
       const { token: authToken, user: userData } = response.data
       
-      console.log('🏪 [DEBUG] AuthStore - Token extraído:', !!authToken)
-      console.log('🏪 [DEBUG] AuthStore - Usuario extraído:', !!userData)
-      
       if (authToken && userData) {
-        console.log('🏪 [DEBUG] AuthStore - Guardando autenticación...')
         saveAuth(authToken, userData)
-        console.log('🏪 [DEBUG] AuthStore - Autenticación guardada exitosamente')
-      } else {
-        console.log('⚠️ [DEBUG] AuthStore - Token o usuario faltante en respuesta')
       }
       
-      const result = { success: true, data: response.data, token: authToken, user: userData }
-      console.log('🏪 [DEBUG] AuthStore - Retornando resultado:', result)
-      return result
+      return { success: true, data: { token: authToken, user: userData } }
     } catch (err: any) {
-      console.error('💥 [DEBUG] AuthStore - Error capturado:', err)
-      console.error('💥 [DEBUG] AuthStore - Error response:', err.response?.data)
-      console.error('💥 [DEBUG] AuthStore - Error status:', err.response?.status)
-      
       const errorMessage = handleStoreError(err, 'Error al registrar usuario')
-      console.log('🏪 [DEBUG] AuthStore - Error procesado:', errorMessage)
       return { success: false, error: errorMessage }
     } finally {
-      console.log('🏪 [DEBUG] AuthStore - Finalizando registro')
       isLoading.value = false
     }
   }

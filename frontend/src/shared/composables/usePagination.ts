@@ -1,7 +1,130 @@
 /**
- * Shared Pagination Composable
- * Provides reusable pagination logic with reactive state management
- * Supports both client-side and server-side pagination
+ * @file usePagination.ts
+ * @description Composable para manejo de paginación en Ecommunitas
+ * 
+ * Este composable proporciona una solución completa y reutilizable para
+ * implementar paginación tanto del lado del cliente como del servidor.
+ * Incluye navegación intuitiva, gestión de estado reactivo, validaciones
+ * robustas y utilidades para generar interfaces de paginación.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📄 Paginación del lado del cliente y servidor
+ * - 🔄 Estado reactivo con Vue 3 Composition API
+ * - 🧭 Navegación intuitiva entre páginas
+ * - ⚙️ Configuración flexible de tamaño de página
+ * - 🎯 Validaciones automáticas de rangos
+ * - 📊 Metadatos completos de paginación
+ * - 🔢 Generación automática de números de página
+ * - 🚨 Manejo de errores con notificaciones
+ * 
+ * FUNCIONALIDADES:
+ * - Navegación: primera, anterior, siguiente, última página
+ * - Salto directo a página específica
+ * - Cambio dinámico de tamaño de página
+ * - Cálculo automático de índices y rangos
+ * - Generación de arrays de datos paginados
+ * - Metadatos para integración con APIs
+ * - Reset automático en cambios de datos
+ * - Números de página para UI de navegación
+ * 
+ * TIPOS DE PAGINACIÓN:
+ * - Cliente: Para arrays de datos locales
+ * - Servidor: Para APIs con paginación backend
+ * - Híbrida: Combinación de ambos enfoques
+ * 
+ * CONFIGURACIÓN:
+ * - initialPage: Página inicial (default: 1)
+ * - initialPageSize: Tamaño inicial de página (default: 10)
+ * - pageSizeOptions: Opciones de tamaño disponibles
+ * - showNotifications: Mostrar notificaciones de error
+ * - autoReset: Reset automático en cambios de datos
+ * 
+ * ESTADO REACTIVO:
+ * - currentPage: Página actual
+ * - pageSize: Elementos por página
+ * - total: Total de elementos
+ * - totalPages: Total de páginas
+ * - hasNextPage/hasPreviousPage: Navegación disponible
+ * - startIndex/endIndex: Índices de rango actual
+ * - paginatedData: Datos de la página actual
+ * 
+ * CASOS DE USO:
+ * - Listados de artículos del marketplace
+ * - Resultados de búsqueda
+ * - Tablas de datos administrativos
+ * - Galerías de imágenes
+ * - Listas de usuarios y mensajes
+ * - Historial de transacciones
+ * - Catálogos de productos
+ * - Feeds de actividad
+ * 
+ * INTEGRACIÓN:
+ * - APIs REST con parámetros de paginación
+ * - Componentes de UI de paginación
+ * - Sistemas de búsqueda y filtrado
+ * - Stores de Pinia para estado global
+ * - Rutas con query parameters
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Reactive refs y computed properties
+ * - Watchers para sincronización automática
+ * - Sistema de notificaciones integrado
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Paginación del lado del cliente
+ * const items = ref([...]) // Array de datos
+ * const {
+ *   paginatedData,
+ *   currentPage,
+ *   totalPages,
+ *   nextPage,
+ *   previousPage,
+ *   goToPage,
+ *   setPageSize
+ * } = usePagination(items, {
+ *   initialPageSize: 20,
+ *   showNotifications: true
+ * })
+ * 
+ * // Paginación del lado del servidor
+ * const fetchItems = async (page: number, pageSize: number) => {
+ *   const response = await api.get('/items', {
+ *     params: { page, pageSize }
+ *   })
+ *   return {
+ *     data: response.data.items,
+ *     total: response.data.total
+ *   }
+ * }
+ * 
+ * const {
+ *   data,
+ *   isLoading,
+ *   refresh,
+ *   currentPage,
+ *   totalPages
+ * } = useServerPagination(fetchItems)
+ * 
+ * // Navegación programática
+ * const handlePageChange = (page: number) => {
+ *   goToPage(page)
+ * }
+ * 
+ * // Cambio de tamaño de página
+ * const handlePageSizeChange = (size: number) => {
+ *   setPageSize(size)
+ * }
+ * 
+ * // Generar números para UI
+ * const pageNumbers = getPageNumbers(5) // Máximo 5 números visibles
+ * ```
  */
 
 import { ref, computed, watch, Ref } from 'vue'

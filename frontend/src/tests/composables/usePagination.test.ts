@@ -89,7 +89,8 @@ describe('usePagination', () => {
     })
 
     it('should not go below first page', () => {
-      const { currentPage, previousPage } = usePagination()
+      const testData = ref(Array.from({ length: 10 }, (_, i) => ({ id: i + 1 })))
+      const { currentPage, previousPage } = usePagination(testData)
       
       previousPage()
       
@@ -191,30 +192,26 @@ describe('usePagination', () => {
 
     it('should show current page info', () => {
       const testData = ref(Array.from({ length: 25 }, (_, i) => ({ id: i + 1 })))
-      const { currentPageInfo, setPageSize, goToPage } = usePagination(testData)
+      const { startIndex, endIndex, total, setPageSize, goToPage } = usePagination(testData)
       
       setPageSize(10)
       goToPage(2)
       
-      expect(currentPageInfo.value).toEqual({
-        start: 11,
-        end: 20,
-        total: 25
-      })
+      expect(startIndex.value).toBe(11)
+      expect(endIndex.value).toBe(20)
+      expect(total.value).toBe(25)
     })
 
     it('should handle last page info correctly', () => {
       const testData = ref(Array.from({ length: 25 }, (_, i) => ({ id: i + 1 })))
-      const { currentPageInfo, setPageSize, goToPage } = usePagination(testData)
+      const { startIndex, endIndex, total, setPageSize, goToPage } = usePagination(testData)
       
       setPageSize(10)
       goToPage(3) // Last page with 5 items
       
-      expect(currentPageInfo.value).toEqual({
-        start: 21,
-        end: 25,
-        total: 25
-      })
+      expect(startIndex.value).toBe(21)
+      expect(endIndex.value).toBe(25)
+      expect(total.value).toBe(25)
     })
   })
 
@@ -269,7 +266,7 @@ describe('usePagination', () => {
 
   describe('Reactive updates', () => {
     it('should update computed values when total items change', async () => {
-      const testData = ref([])
+      const testData = ref<{ id: number }[]>([])
       const { totalPages } = usePagination(testData)
       
       testData.value = Array.from({ length: 30 }, (_, i) => ({ id: i + 1 }))

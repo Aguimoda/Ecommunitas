@@ -1,3 +1,65 @@
+<!--
+/**
+ * @file ProfileEditor.vue
+ * @description Modal para editar el perfil de usuario en Ecommunitas
+ * 
+ * Este componente proporciona una interfaz modal completa para que los usuarios
+ * puedan editar su información de perfil, incluyendo foto de perfil, datos
+ * personales, biografía y configuraciones de privacidad. Incluye validación
+ * en tiempo real y gestión de estados.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 👤 Edición completa del perfil de usuario
+ * - 📸 Subida y previsualización de avatar
+ * - ✅ Validación en tiempo real
+ * - 💾 Guardado automático de cambios
+ * - 🔄 Estados de carga y error
+ * - 📱 Diseño responsive
+ * - ♿ Accesibilidad completa
+ * 
+ * FUNCIONALIDADES:
+ * - Edición de información personal (nombre, email, bio)
+ * - Subida y cambio de foto de perfil
+ * - Previsualización de imagen antes de guardar
+ * - Validación de campos obligatorios
+ * - Manejo de errores de validación
+ * - Confirmación antes de guardar cambios
+ * - Cancelación con confirmación si hay cambios
+ * 
+ * CAMPOS EDITABLES:
+ * - Foto de perfil/avatar
+ * - Nombre completo
+ * - Dirección de email
+ * - Biografía personal
+ * - Ubicación
+ * - Configuraciones de privacidad
+ * - Preferencias de notificaciones
+ * 
+ * VALIDACIONES:
+ * - Campos obligatorios (nombre, email)
+ * - Formato de email válido
+ * - Longitud mínima/máxima de texto
+ * - Formato de imagen para avatar
+ * - Tamaño máximo de archivo de imagen
+ * - Caracteres permitidos en campos de texto
+ * 
+ * EVENTOS EMITIDOS:
+ * - close: Cierra el modal
+ * - updated: Perfil actualizado exitosamente
+ * - error: Error en la actualización
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Validación de formularios
+ * - Gestión de archivos de imagen
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto">
@@ -30,7 +92,7 @@
                 />
                 <button 
                   type="button" 
-                  @click="$refs.fileInput.click()"
+                  @click="triggerFileInput"
                   class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Cambiar imagen
@@ -95,7 +157,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { USER_ROUTES } from '@/config/apiRoutes'
 import { displayError } from '@/shared/utils/errorHandler'
 import { userService } from '@/features/users'
 
@@ -138,8 +199,6 @@ function mapUserToProfile(user: any): Profile {
 onMounted(async () => {
   try {
     isLoading.value = true;
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await userService.getCurrentUserProfile();
 
      if (response && response.success) {
@@ -154,7 +213,7 @@ onMounted(async () => {
       // Use avatarUrl from fetchedProfile for preview
       previewImage.value = fetchedProfile.value.avatarUrl;
     } else {
-      displayError(response.error || 'Error al cargar el perfil');
+      displayError((response as any).error || 'Error al cargar el perfil');
     }
   } catch (error: any) {
     console.error("Error fetching profile:", error);
@@ -164,6 +223,12 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+const triggerFileInput = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
 
 const handleImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement

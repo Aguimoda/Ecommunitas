@@ -1,6 +1,18 @@
 /**
  * @file auth.ts
- * @description Definiciones de tipos para el sistema de autenticación
+ * @description Definiciones de tipos TypeScript para el sistema de autenticación de Ecommunitas
+ * @module Types/Auth
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo define todas las interfaces y tipos relacionados con:
+ * - Información de usuarios y perfiles
+ * - Estados de autenticación y sesión
+ * - Credenciales de login y registro
+ * - Respuestas del servidor de autenticación
+ * - Configuraciones del sistema de auth
+ * - Opciones de seguridad y timeouts
  */
 
 /**

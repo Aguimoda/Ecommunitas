@@ -48,7 +48,7 @@ import { Request, Response, NextFunction } from 'express';
 import Message from '../models/Message';
 import User from '../models/User';
 import asyncHandler from '../utils/async';
-import ErrorResponse from '../utils/errorResponse';
+import { AppError } from '../utils/app-error';
 
 // Interfaz para el request autenticado
 interface AuthenticatedRequest extends Request {
@@ -56,6 +56,9 @@ interface AuthenticatedRequest extends Request {
     id: string;
   };
 }
+
+// Alias para compatibilidad con código existente
+const ErrorResponse = AppError;
 
 // @desc    Enviar un mensaje a otro usuario
 // @route   POST /api/v1/messages

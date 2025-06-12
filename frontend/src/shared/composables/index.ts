@@ -1,7 +1,49 @@
 /**
- * Shared Composables Index
- * Centralizes exports for all shared composables
- * Enables clean imports: import { useErrorHandler, useNotifications } from '@/shared/composables'
+ * @file index.ts
+ * @description Índice centralizado de composables compartidos en Ecommunitas
+ * 
+ * Este archivo centraliza todas las exportaciones de composables compartidos
+ * para facilitar las importaciones limpias y organizadas en toda la aplicación.
+ * Proporciona un punto único de acceso a toda la funcionalidad de composables.
+ * 
+ * COMPOSABLES INCLUIDOS:
+ * - useErrorHandler: Manejo centralizado de errores y notificaciones
+ * - useNotifications: Sistema de notificaciones toast
+ * - useGeolocation: Funcionalidad de geolocalización
+ * - useValidation: Validación de formularios y campos
+ * - useLocalStorage: Almacenamiento local reactivo
+ * - usePagination: Paginación de datos
+ * - useImageUpload: Carga y gestión de imágenes
+ * - useSearch: Búsqueda avanzada de artículos
+ * - useNavBar: Gestión de la barra de navegación
+ * 
+ * VENTAJAS:
+ * - Importaciones limpias y organizadas
+ * - Tipado TypeScript completo exportado
+ * - Punto único de acceso a composables
+ * - Facilita el mantenimiento y refactoring
+ * - Mejora la experiencia de desarrollo
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Importación limpia de múltiples composables
+ * import { 
+ *   useErrorHandler, 
+ *   useNotifications, 
+ *   useValidation 
+ * } from '@/shared/composables'
+ * 
+ * // Importación de tipos
+ * import type { 
+ *   ErrorDetails, 
+ *   ValidationRule, 
+ *   NotificationOptions 
+ * } from '@/shared/composables'
+ * ```
  */
 
 // Error handling

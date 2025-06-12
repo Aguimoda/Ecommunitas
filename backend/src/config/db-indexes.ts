@@ -1,13 +1,31 @@
 /**
- * Database Indexes Configuration
- * This file manages the creation and maintenance of MongoDB indexes
- * for optimizing query performance in the Ecommunitas application.
+ * @file db-indexes.ts
+ * @description Configuración y gestión de índices de MongoDB
+ * @module Config/DatabaseIndexes
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona:
+ * - Creación automática de índices para optimización de consultas
+ * - Verificación de índices existentes
+ * - Logging detallado de operaciones de índices
+ * - Índices para colecciones User, Item y Message
+ * - Índices geoespaciales para búsquedas por ubicación
+ * - Índices compuestos para consultas complejas
  */
 
 import mongoose from 'mongoose';
 import { createLogger, format, transports } from 'winston';
 
-// Create logger for index operations
+/**
+ * Logger específico para operaciones de índices de base de datos
+ * 
+ * @constant {Logger} indexLogger
+ * @description
+ * Logger configurado para registrar todas las operaciones relacionadas con
+ * la creación, verificación y mantenimiento de índices de MongoDB
+ */
 const indexLogger = createLogger({
   level: 'info',
   format: format.combine(
@@ -30,8 +48,38 @@ const indexLogger = createLogger({
 });
 
 /**
- * Creates and verifies indexes for all collections
- * This ensures optimal query performance for frequently accessed data
+ * Configura y verifica todos los índices de MongoDB
+ * 
+ * @async
+ * @function setupIndexes
+ * @returns {Promise<void>} Promesa que se resuelve cuando todos los índices están configurados
+ * @throws {Error} Error si falla la creación de algún índice
+ * 
+ * @description
+ * Esta función crea y verifica los siguientes índices:
+ * 
+ * **Colección User:**
+ * - email (único): Para autenticación y búsqueda de usuarios
+ * - role: Para filtrado por roles de usuario
+ * 
+ * **Colección Item:**
+ * - user: Para encontrar items por usuario
+ * - category: Para filtrado por categoría
+ * - available: Para encontrar items disponibles
+ * - createdAt: Para ordenamiento por fecha
+ * - location (2dsphere): Para búsquedas geoespaciales
+ * - Índices compuestos para consultas complejas
+ * 
+ * **Colección Message:**
+ * - sender, receiver: Para consultas de mensajes
+ * - createdAt: Para ordenamiento temporal
+ * - read: Para filtrado por estado de lectura
+ * 
+ * @example
+ * ```typescript
+ * // Llamar durante la inicialización de la aplicación
+ * await setupIndexes();
+ * ```
  */
 const setupIndexes = async (): Promise<void> => {
   try {

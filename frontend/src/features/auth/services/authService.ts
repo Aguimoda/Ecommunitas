@@ -259,11 +259,11 @@ class AuthService {
    * this.handleError(error, 'Error al procesar solicitud')
    * ```
    */
-  private handleError(error: any, defaultMessage: string): never {
+  private handleError(error: unknown, defaultMessage: string): never {
     const processedError = processError(error)
     
     // Maneja errores de autenticación específicamente
-    if (error.response?.status === 401) {
+    if ((error as any)?.response?.status === 401) {
       handleAuthError(error, true)
     }
     
@@ -343,37 +343,17 @@ class AuthService {
    * ```
    */
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    console.log('🔧 [DEBUG] AuthService - Iniciando registro...')
-    console.log('🔧 [DEBUG] AuthService - URL:', AUTH_ROUTES.REGISTER)
-    console.log('🔧 [DEBUG] AuthService - Credenciales:', {
-      name: credentials.name,
-      email: credentials.email,
-      password: '***'
-    })
-    
     const headers = this.getAuthHeaders()
-    console.log('🔧 [DEBUG] AuthService - Headers:', headers)
     
     try {
-      console.log('🔧 [DEBUG] AuthService - Enviando petición HTTP...')
       const response: AxiosResponse<AuthResponse> = await axios.post(
         AUTH_ROUTES.REGISTER,
         credentials,
         { headers }
       )
       
-      console.log('🔧 [DEBUG] AuthService - Respuesta recibida:')
-      console.log('🔧 [DEBUG] AuthService - Status:', response.status)
-      console.log('🔧 [DEBUG] AuthService - StatusText:', response.statusText)
-      console.log('🔧 [DEBUG] AuthService - Data:', response.data)
-      
       return response.data
-    } catch (error: any) {
-      console.error('💥 [DEBUG] AuthService - Error capturado:', error)
-      console.error('💥 [DEBUG] AuthService - Error message:', error.message)
-      console.error('💥 [DEBUG] AuthService - Error response:', error.response?.data)
-      console.error('💥 [DEBUG] AuthService - Error status:', error.response?.status)
-      
+    } catch (error: unknown) {
       this.handleError(error, 'Error al registrar usuario')
     }
   }

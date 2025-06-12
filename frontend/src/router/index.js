@@ -1,3 +1,47 @@
+/**
+ * @fileoverview Configuración del enrutador principal de la aplicación Ecommunitas
+ * @description Define todas las rutas de la aplicación, incluyendo guards de navegación,
+ * lazy loading de componentes, y configuración de metadatos para autenticación y autorización.
+ * 
+ * @features
+ * - Enrutamiento con Vue Router 4
+ * - Lazy loading de componentes para optimización
+ * - Guards de navegación para autenticación
+ * - Protección de rutas privadas y públicas
+ * - Redirecciones automáticas según estado de autenticación
+ * - Manejo de rutas no encontradas (404)
+ * - Configuración de metadatos de ruta
+ * 
+ * @technical
+ * - Vue Router 4 con modo history
+ * - Lazy loading con import() dinámico
+ * - Guards beforeEach para autenticación
+ * - Integración con Pinia stores
+ * - TypeScript para tipado de rutas
+ * 
+ * @routes
+ * - / : Página principal (HomeView)
+ * - /login : Inicio de sesión (solo invitados)
+ * - /register : Registro de usuario (solo invitados)
+ * - /post-item : Publicar artículo (requiere autenticación)
+ * - /search : Búsqueda de artículos
+ * - /item/:id : Detalle de artículo
+ * - /edit-item/:id : Editar artículo (requiere autenticación)
+ * - /profile : Perfil de usuario (requiere autenticación)
+ * - /messages : Centro de mensajes (requiere autenticación)
+ * - /message/:userId : Conversación específica (requiere autenticación)
+ * - /admin/* : Panel de administración (requiere rol admin)
+ * 
+ * @guards
+ * - requiresAuth: Requiere usuario autenticado
+ * - requiresGuest: Solo para usuarios no autenticados
+ * - requiresAdmin: Requiere rol de administrador
+ * 
+ * @author Equipo Ecommunitas
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth'
 
@@ -32,10 +76,17 @@ const routes = [
     component: () => import('../shared/views/SearchView.vue')
   },
   {
-    path: '/items/:id',
+    path: '/item/:id',
     name: 'ItemDetailView',
     component: () => import('../features/items/views/ItemDetailView.vue'),
     props: true
+  },
+  {
+    path: '/edit-item/:id',
+    name: 'EditItemView',
+    component: () => import('../features/items/views/EditItemView.vue'),
+    props: true,
+    meta: { requiresAuth: true }
   },
   {
     path: '/profile',
@@ -50,7 +101,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/messages/:id',
+    path: '/message/:userId',
     name: 'MessageDetailView',
     component: () => import('../features/messages/views/MessageDetailView.vue'),
     props: true,
@@ -58,13 +109,19 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'AdminDashboardView',
+    name: 'AdminDashboard',
     component: () => import('../features/admin/views/AdminDashboard.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/items',
+    name: 'ItemManagementView',
+    component: () => import('../features/admin/views/ItemManagementView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
-    name: 'NotFound',
+    name: 'NotFoundView',
     component: () => import('../shared/views/NotFoundView.vue')
   }
 ]
@@ -74,37 +131,25 @@ const router = createRouter({
   routes
 })
 
-// Guard centralizado usando el store de autenticación
-router.beforeEach(async (to, from, next) => {
+// Guard de navegación global
+router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   
-  // Verificar autenticación si hay token
-  if (authStore.token && !authStore.user) {
-    await authStore.checkAuth()
-  }
-  
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
-  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
-  
-  // Redirigir usuarios autenticados lejos de páginas de invitado
-  if (requiresGuest && authStore.isAuthenticated) {
-    next({ name: 'HomeView' })
+  // Verificar si la ruta requiere autenticación
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
     return
   }
   
-  // Verificar autenticación requerida
-  if (requiresAuth && !authStore.isAuthenticated) {
-    next({ 
-      name: 'LoginView',
-      query: { redirect: to.fullPath }
-    })
+  // Verificar si la ruta es solo para invitados
+  if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next('/')
     return
   }
   
-  // Verificar permisos de administrador
-  if (requiresAdmin && !authStore.isAdmin) {
-    next({ name: 'HomeView' })
+  // Verificar si la ruta requiere permisos de admin
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    next('/')
     return
   }
   

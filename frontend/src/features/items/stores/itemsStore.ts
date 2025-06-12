@@ -215,7 +215,6 @@ export const useItemsStore = defineStore('items', () => {
   const initialize = () => {
     if (!isInitialized.value) {
       isInitialized.value = true
-      console.log('Items store initialized')
     }
   }
 
@@ -368,8 +367,7 @@ export const useItemsStore = defineStore('items', () => {
       // La API devuelve artículos en response.data (del middleware advancedResults)
       const responseItems = Array.isArray(response.data) ? response.data : []
       
-      console.log('fetchItems - responseItems:', responseItems)
-      console.log('fetchItems - full response:', response)
+
       
       if (append && pagination.value.page > 1) {
         items.value = [...items.value, ...responseItems]
@@ -425,8 +423,7 @@ export const useItemsStore = defineStore('items', () => {
       const responseItems = Array.isArray(response.data) ? response.data : []
       items.value = responseItems
       
-      console.log('searchItems - responseItems:', responseItems)
-      console.log('searchItems - full response:', response)
+
       updatePagination(response)
       updateCache(responseItems)
       
@@ -436,8 +433,7 @@ export const useItemsStore = defineStore('items', () => {
       return response
     } catch (err) {
       if ((err as any)?.name === 'AbortError') {
-        console.log('Search aborted')
-        return { items: [], total: 0, page: 1, totalPages: 0, hasNextPage: false, hasPrevPage: false }
+        return { success: true, count: 0, data: [], total: 0, page: 1, totalPages: 0, hasNextPage: false, hasPrevPage: false }
       }
       
       handleStoreError(err, 'Error en la búsqueda')
@@ -665,24 +661,24 @@ export const useItemsStore = defineStore('items', () => {
     
     try {
       const response = await itemService.getItemsByUser(userId)
-      items.value = response.items
+      items.value = response.data
       
       // Actualizar caché para cada item del usuario
-      updateCache(response.items)
+      updateCache(response.data)
       
       // Resetear paginación para items del usuario
       pagination.value = {
         page: 1,
-        limit: response.items.length,
+        limit: response.data.length,
         totalPages: 1,
-        total: response.items.length,
+        total: response.data.length,
         hasNextPage: false,
         hasPrevPage: false
       }
       
       lastFetch.value = Date.now()
       
-      return response.items
+      return response.data
     } catch (err) {
       handleStoreError(err, 'Error al obtener items del usuario')
       throw err
@@ -704,14 +700,14 @@ export const useItemsStore = defineStore('items', () => {
     
     try {
       const response = await itemService.getMyItems()
-      items.value = response.items
+      items.value = response.data
       
-      updateCache(response.items)
+      updateCache(response.data)
       updatePagination(response)
       
       lastFetch.value = Date.now()
       
-      return response.items
+      return response.data
     } catch (err) {
       handleStoreError(err, 'Error al obtener tus items')
       throw err

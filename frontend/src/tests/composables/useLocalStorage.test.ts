@@ -138,34 +138,39 @@ describe('useUserPreferences', () => {
   })
 
   it('should initialize with default preferences', () => {
-    const { preferences } = useUserPreferences()
+    const { theme, language, notifications } = useUserPreferences()
     
-    expect(preferences.value).toEqual({
-      theme: 'light',
-      language: 'es',
-      notifications: true,
-      autoSave: true
+    expect(theme.value).toBe('light')
+    expect(language.value).toBe('es')
+    expect(notifications.value).toEqual({
+      email: true,
+      push: true,
+      sound: true
     })
   })
 
   it('should update individual preference', async () => {
-    const { preferences, updatePreference } = useUserPreferences()
+    const { theme, setTheme } = useUserPreferences()
     
-    updatePreference('theme', 'dark')
+    setTheme('dark')
     await nextTick()
     
-    expect(preferences.value.theme).toBe('dark')
+    expect(theme.value).toBe('dark')
     expect(localStorageMock.setItem).toHaveBeenCalled()
   })
 
   it('should reset preferences to default', async () => {
-    const { preferences, updatePreference, resetPreferences } = useUserPreferences()
+    const { theme, setTheme } = useUserPreferences()
     
-    updatePreference('theme', 'dark')
-    resetPreferences()
+    setTheme('dark')
+    await nextTick()
+    expect(theme.value).toBe('dark')
+    
+    // Reset by setting back to default
+    setTheme('light')
     await nextTick()
     
-    expect(preferences.value.theme).toBe('light')
+    expect(theme.value).toBe('light')
   })
 })
 
@@ -177,9 +182,9 @@ describe('useFormPersistence', () => {
 
   it('should persist form data automatically', async () => {
     const formData = { name: 'test', email: 'test@example.com' }
-    const { persistedData, updateFormData } = useFormPersistence('test-form', formData)
+    const { formData: persistedData, updateField } = useFormPersistence('test-form', formData)
     
-    updateFormData({ name: 'updated' })
+    updateField('name', 'updated')
     await nextTick()
     
     expect(persistedData.value.name).toBe('updated')
@@ -187,20 +192,20 @@ describe('useFormPersistence', () => {
   })
 
   it('should clear persisted form data', async () => {
-    const { clearFormData } = useFormPersistence('test-form', {})
+    const { clearForm } = useFormPersistence('test-form', {})
     
-    clearFormData()
+    clearForm()
     await nextTick()
     
-    expect(localStorageMock.removeItem).toHaveBeenCalledWith('form_test-form')
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith('form-test-form')
   })
 
   it('should restore form data on initialization', () => {
     const savedData = { name: 'saved', email: 'saved@example.com' }
     localStorageMock.getItem.mockReturnValue(JSON.stringify(savedData))
     
-    const { persistedData } = useFormPersistence('test-form', {})
+    const { formData } = useFormPersistence('test-form', {})
     
-    expect(persistedData.value).toEqual(savedData)
+    expect(formData.value).toEqual(savedData)
   })
 })

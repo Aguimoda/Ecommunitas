@@ -1,3 +1,28 @@
+/**
+ * @file messages.ts
+ * @description Rutas para el sistema de mensajería en la API de Ecommunitas
+ * @module Routes/Messages
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este archivo define las rutas para el sistema de mensajería:
+ * - Envío y recepción de mensajes privados
+ * - Gestión de conversaciones entre usuarios
+ * - Control de estado de lectura
+ * - Notificaciones de mensajes no leídos
+ * 
+ * Rutas disponibles:
+ * - GET / - Obtener mensajes del usuario actual
+ * - POST / - Enviar un nuevo mensaje
+ * - GET /unread - Obtener mensajes no leídos
+ * - GET /conversations - Obtener lista de conversaciones
+ * - GET /conversations/:userId - Obtener conversación específica
+ * - PUT /conversations/:userId/read - Marcar conversación como leída
+ * - PUT /:id/read - Marcar mensaje como leído
+ * - DELETE /:id - Eliminar mensaje
+ */
+
 import express from 'express';
 import {
   sendMessage,

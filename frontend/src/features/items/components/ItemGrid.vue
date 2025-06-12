@@ -1,23 +1,47 @@
 <!--
-  @file ItemGrid.vue
-  @description Componente de cuadrícula para mostrar elementos/artículos
-  
-  Este componente es responsable de renderizar una cuadrícula de elementos con diferentes estados:
-  - Estado de carga con spinner animado
-  - Estado de error con opción de reintento
-  - Estado vacío con mensaje personalizable
-  - Cuadrícula de elementos con tarjetas interactivas
-  
-  Características principales:
-  - Diseño responsivo (1 columna en móvil, 2 en tablet, 3 en desktop)
-  - Soporte para modo oscuro
-  - Animaciones de hover y transiciones suaves
-  - Información de debug opcional para desarrollo
-  - Manejo de estados de carga, error y vacío
-  - Enlaces a páginas de detalle de elementos
-  
-  @author Equipo de Desarrollo
-  @version 1.0.0
+/**
+ * @file ItemGrid.vue
+ * @description Componente de cuadrícula responsiva para mostrar artículos en Ecommunitas
+ * 
+ * Este componente es el núcleo de la visualización de artículos en la plataforma.
+ * Proporciona una interfaz elegante y funcional para mostrar múltiples artículos
+ * en formato de cuadrícula con soporte completo para diferentes estados de la aplicación.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📱 Diseño completamente responsivo (1-3 columnas según dispositivo)
+ * - 🌙 Soporte nativo para modo oscuro/claro
+ * - ⚡ Animaciones fluidas y transiciones suaves
+ * - 🔄 Estados de carga, error y vacío bien definidos
+ * - 🖼️ Manejo inteligente de imágenes con fallbacks
+ * - 🔗 Navegación integrada a páginas de detalle
+ * - 🐛 Herramientas de debug para desarrollo
+ * 
+ * ESTADOS MANEJADOS:
+ * - Loading: Spinner animado durante la carga de datos
+ * - Error: Mensaje de error con opción de reintento
+ * - Empty: Estado vacío con iconografía y mensajes personalizables
+ * - Success: Cuadrícula de artículos con tarjetas interactivas
+ * 
+ * FUNCIONALIDADES:
+ * - Grid responsivo adaptativo (CSS Grid)
+ * - Lazy loading de imágenes
+ * - Manejo de errores de carga de imágenes
+ * - Navegación programática con Vue Router
+ * - Soporte para múltiples formatos de imagen
+ * - Indicadores visuales de estado
+ * - Accesibilidad mejorada con ARIA labels
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos responsivos
+ * - Vue Router para navegación
+ * - CSS Grid y Flexbox para layout
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 -->
 <template>
   <!-- Contenedor principal de la cuadrícula de elementos -->
@@ -179,259 +203,561 @@
 </template>
 
 <script setup>
-/**
- * Configuración del script del componente ItemGrid
- * Utiliza la Composition API de Vue 3 con <script setup>
- */
-import { computed } from 'vue'
-import { translateCategory, getCategoryBadgeClass } from '@/utils/translations'
+// ============================================================================
+// IMPORTACIONES
+// ============================================================================
 
 /**
- * Definición de props del componente
- * Estas propiedades permiten personalizar el comportamiento y apariencia del componente
+ * Importaciones de Vue 3 Composition API
+ * - computed: Para propiedades computadas reactivas
+ */
+import { computed } from 'vue'
+
+/**
+ * Utilidades de traducción y estilos
+ * - translateCategory: Traduce categorías al idioma local
+ * - getCategoryBadgeClass: Obtiene clases CSS para badges de categoría
+ */
+import { translateCategory, getCategoryBadgeClass } from '@/utils/translations'
+
+// ============================================================================
+// PROPS Y CONFIGURACIÓN
+// ============================================================================
+
+/**
+ * Definición de props del componente ItemGrid
+ * Estas propiedades permiten personalizar completamente el comportamiento
+ * y apariencia del componente desde el componente padre
  */
 const props = defineProps({
-  // Datos principales
+  // ========================================
+  // DATOS PRINCIPALES
+  // ========================================
+  
+  /**
+   * Array de artículos a mostrar en la cuadrícula
+   * Cada item debe tener al menos: _id, title, description
+   */
   items: {
     type: Array,
     default: () => [],
-    // Array de elementos a mostrar en la cuadrícula
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-    // Indica si los datos se están cargando
-  },
-  error: {
-    type: String,
-    default: null,
-    // Mensaje de error a mostrar si hay problemas
+    validator: (items) => {
+      // Validar que todos los items tengan las propiedades mínimas requeridas
+      return items.every(item => item && typeof item === 'object' && item._id)
+    }
   },
   
-  // Propiedades de paginación
+  /**
+   * Estado de carga de los datos
+   * Cuando es true, se muestra el spinner de carga
+   */
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  
+  /**
+   * Mensaje de error a mostrar
+   * Si hay valor, se muestra el estado de error
+   */
+  error: {
+    type: String,
+    default: null
+  },
+  
+  // ========================================
+  // PROPIEDADES DE PAGINACIÓN
+  // ========================================
+  
+  /**
+   * Indica si hay más páginas disponibles para cargar
+   * Controla la visibilidad del botón "Cargar más"
+   */
   hasNextPage: {
     type: Boolean,
-    default: false,
-    // Indica si hay más páginas disponibles
+    default: false
   },
+  
+  /**
+   * Número total de artículos disponibles en el backend
+   * Se usa para mostrar información de paginación
+   */
   totalItems: {
     type: Number,
     default: 0,
-    // Número total de elementos disponibles
+    validator: (value) => value >= 0
   },
+  
+  /**
+   * Página actual en la paginación
+   * Opcional, se usa para mostrar información de página
+   */
   currentPage: {
     type: Number,
     default: null,
-    // Página actual (opcional)
+    validator: (value) => value === null || value > 0
   },
+  /**
+   * Número total de páginas disponibles
+   * Opcional, se usa junto con currentPage para mostrar navegación
+   */
   totalPages: {
     type: Number,
     default: null,
-    // Número total de páginas (opcional)
+    validator: (value) => value === null || value > 0
   },
   
-  // Propiedades de personalización de funcionalidad
+  // ========================================
+  // PROPIEDADES DE PERSONALIZACIÓN DE FUNCIONALIDAD
+  // ========================================
+  
+  /**
+   * Controla la visibilidad del botón "Cargar más"
+   * Útil para implementar paginación infinita
+   */
   showLoadMore: {
     type: Boolean,
-    default: true,
-    // Controla si se muestra el botón "Cargar más"
-  },
-  showPaginationInfo: {
-    type: Boolean,
-    default: true,
-    // Controla si se muestra la información de paginación
-  },
-  showDescription: {
-    type: Boolean,
-    default: true,
-    // Controla si se muestra la descripción de los elementos
-  },
-  showCategory: {
-    type: Boolean,
-    default: true,
-    // Controla si se muestra la categoría de los elementos
-  },
-  showRetry: {
-    type: Boolean,
-    default: true,
-    // Controla si se muestra el botón de reintento en caso de error
+    default: true
   },
   
-  // Propiedades de personalización de texto
+  /**
+   * Controla la visibilidad de la información de paginación
+   * Muestra "X de Y artículos" y "Página X de Y"
+   */
+  showPaginationInfo: {
+    type: Boolean,
+    default: true
+  },
+  
+  /**
+   * Controla si se muestra la descripción en las tarjetas
+   * Útil para vistas más compactas
+   */
+  showDescription: {
+    type: Boolean,
+    default: true
+  },
+  
+  /**
+   * Controla si se muestran los badges de categoría
+   * Permite ocultar categorías en contextos específicos
+   */
+  showCategory: {
+    type: Boolean,
+    default: true
+  },
+  
+  /**
+   * Controla si se muestra el botón de reintento en errores
+   * Permite deshabilitar la funcionalidad de reintento
+   */
+  showRetry: {
+    type: Boolean,
+    default: true
+  },
+  
+  // ========================================
+  // PROPIEDADES DE PERSONALIZACIÓN DE TEXTO
+  // ========================================
+  
+  /**
+   * Texto mostrado durante el estado de carga
+   * Personalizable para diferentes contextos
+   */
   loadingText: {
     type: String,
-    default: 'Cargando artículos...',
-    // Texto personalizable para el estado de carga
+    default: 'Cargando artículos...'
   },
+  
+  /**
+   * Texto principal mostrado en estado vacío
+   * Se muestra cuando no hay artículos para mostrar
+   */
   emptyText: {
     type: String,
-    default: 'No hay artículos para mostrar',
-    // Texto principal para el estado vacío
+    default: 'No hay artículos para mostrar'
   },
+  
+  /**
+   * Subtexto explicativo para el estado vacío
+   * Proporciona orientación al usuario sobre qué hacer
+   */
   emptySubtext: {
     type: String,
-    default: 'Intenta ajustar los filtros o vuelve más tarde',
-    // Subtexto explicativo para el estado vacío
+    default: 'Intenta ajustar los filtros o vuelve más tarde'
   },
+  
+  /**
+   * Texto del botón "Cargar más"
+   * Personalizable según el contexto de la aplicación
+   */
   loadMoreText: {
     type: String,
-    default: 'Cargar más artículos',
-    // Texto del botón "Cargar más"
+    default: 'Cargar más artículos'
   }
 })
 
+// ============================================================================
+// EVENTOS Y EMISIONES
+// ============================================================================
+
 /**
  * Definición de eventos que el componente puede emitir
- * Permite la comunicación con componentes padre
+ * Permite la comunicación bidireccional con componentes padre
+ * 
+ * EVENTOS DISPONIBLES:
+ * - load-more: Solicita cargar más elementos (paginación infinita)
+ * - retry: Solicita reintentar la carga después de un error
  */
 const emit = defineEmits([
-  'load-more', // Se emite cuando el usuario hace clic en "Cargar más"
-  'retry'      // Se emite cuando el usuario hace clic en "Reintentar"
+  /**
+   * Evento emitido cuando el usuario solicita cargar más elementos
+   * Se activa al hacer clic en el botón "Cargar más"
+   * El componente padre debe manejar este evento para cargar datos adicionales
+   */
+  'load-more',
+  
+  /**
+   * Evento emitido cuando el usuario solicita reintentar una operación fallida
+   * Se activa al hacer clic en el botón "Reintentar" en el estado de error
+   * El componente padre debe manejar este evento para volver a intentar la carga
+   */
+  'retry'
 ])
 
-/**
- * Métodos del componente
- * Funciones auxiliares para el procesamiento de datos y manejo de eventos
- */
+// ============================================================================
+// MÉTODOS Y FUNCIONES AUXILIARES
+// ============================================================================
 
 /**
- * Obtiene la URL de la imagen principal de un elemento
- * Implementa una jerarquía de prioridades para diferentes formatos de imagen
- * @param {Object} item - El elemento del cual obtener la imagen
- * @returns {string} URL de la imagen o imagen por defecto
+ * Obtiene la URL de la imagen principal de un artículo
+ * 
+ * Implementa una jerarquía de prioridades para manejar diferentes
+ * formatos de almacenamiento de imágenes en el backend:
+ * 
+ * PRIORIDADES (de mayor a menor):
+ * 1. item.images[0] - Array de imágenes, toma la primera
+ * 2. item.imageUrls[0] - Array de URLs, toma la primera
+ * 3. item.imageUrl - URL única de imagen
+ * 4. '/default-item.png' - Imagen por defecto como fallback
+ * 
+ * @param {Object} item - El artículo del cual obtener la imagen
+ * @param {Array} [item.images] - Array de URLs de imágenes
+ * @param {Array} [item.imageUrls] - Array alternativo de URLs
+ * @param {string} [item.imageUrl] - URL única de imagen
+ * @returns {string} URL de la imagen a mostrar
  */
 const getItemImage = (item) => {
   // Validación básica del elemento
-  if (!item) return '/default-item.png';
+  if (!item || typeof item !== 'object') {
+    console.warn('getItemImage: item inválido recibido', item);
+    return '/default-item.png';
+  }
   
-  // Jerarquía de prioridades para las imágenes:
-  // 1. images[0] (array de imágenes, primera imagen)
-  // 2. imageUrls[0] (array de URLs de imágenes, primera URL)
-  // 3. imageUrl (URL única de imagen)
-  // 4. imagen por defecto
-  
+  // Prioridad 1: Array de imágenes (formato principal)
   if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-    return item.images[0];
+    const imageUrl = item.images[0];
+    if (typeof imageUrl === 'string' && imageUrl.trim()) {
+      return imageUrl;
+    }
   }
   
-  if (item.imageUrls && item.imageUrls.length > 0) {
-    return item.imageUrls[0];
+  // Prioridad 2: Array de URLs de imágenes (formato alternativo)
+  if (item.imageUrls && Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
+    const imageUrl = item.imageUrls[0];
+    if (typeof imageUrl === 'string' && imageUrl.trim()) {
+      return imageUrl;
+    }
   }
   
-  if (item.imageUrl) {
+  // Prioridad 3: URL única de imagen (formato legacy)
+  if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim()) {
     return item.imageUrl;
   }
   
+  // Fallback: Imagen por defecto
   return '/default-item.png';
 }
 
 /**
- * Valida si un ID es válido
- * Verifica que el ID sea una cadena no vacía
- * @param {any} id - El ID a validar
- * @returns {boolean} true si el ID es válido, false en caso contrario
+ * Valida si un identificador es válido y utilizable
+ * 
+ * Realiza validaciones exhaustivas para asegurar que el ID
+ * puede ser utilizado de forma segura en operaciones del DOM
+ * y llamadas a la API.
+ * 
+ * VALIDACIONES REALIZADAS:
+ * - Existencia del valor (no null, undefined, 0, false)
+ * - Tipo de dato correcto (string)
+ * - Contenido no vacío (después de trim)
+ * 
+ * @param {any} id - El identificador a validar
+ * @returns {boolean} true si el ID es válido y utilizable, false en caso contrario
+ * 
+ * @example
+ * isValidId('abc123') // true
+ * isValidId('') // false
+ * isValidId(null) // false
+ * isValidId(123) // false
  */
 const isValidId = (id) => {
   return id && typeof id === 'string' && id.trim() !== ''
 }
 
 /**
- * Formatea una fecha para mostrarla de forma legible
- * Convierte una fecha ISO a formato español legible
- * @param {string} dateString - Fecha en formato ISO
- * @returns {string} Fecha formateada en español o cadena vacía si no hay fecha
+ * Formatea una fecha para mostrarla de forma legible al usuario
+ * 
+ * Convierte fechas en formato ISO 8601 o timestamp a un formato
+ * legible en español, siguiendo las convenciones locales.
+ * 
+ * CARACTERÍSTICAS:
+ * - Formato de salida: "15 ene 2024"
+ * - Localización: Español (es-ES)
+ * - Manejo de errores: Retorna cadena vacía para fechas inválidas
+ * - Compatibilidad: Acepta strings ISO y objetos Date
+ * 
+ * @param {string|Date} dateString - Fecha en formato ISO, timestamp o objeto Date
+ * @returns {string} Fecha formateada en español o cadena vacía si la fecha es inválida
+ * 
+ * @example
+ * formatDate('2024-01-15T10:30:00Z') // "15 ene 2024"
+ * formatDate(null) // ""
+ * formatDate('invalid') // ""
  */
 const formatDate = (dateString) => {
   if (!dateString) return ''
   
-  // Opciones de formato para fecha en español
-  const options = { 
-    year: 'numeric',  // Año completo (ej: 2024)
-    month: 'short',   // Mes abreviado (ej: ene, feb, mar)
-    day: 'numeric'    // Día del mes (ej: 1, 2, 15)
+  try {
+    // Opciones de formato para fecha en español
+    const options = { 
+      year: 'numeric',  // Año completo (ej: 2024)
+      month: 'short',   // Mes abreviado (ej: ene, feb, mar)
+      day: 'numeric'    // Día del mes (ej: 1, 2, 15)
+    }
+    
+    const date = new Date(dateString)
+    
+    // Validar que la fecha es válida
+    if (isNaN(date.getTime())) {
+      console.warn('formatDate: Fecha inválida recibida', dateString)
+      return ''
+    }
+    
+    return date.toLocaleDateString('es-ES', options)
+  } catch (error) {
+    console.error('formatDate: Error al formatear fecha', error, dateString)
+    return ''
   }
-  
-  return new Date(dateString).toLocaleDateString('es-ES', options)
 }
 
 /**
- * Maneja errores de carga de imágenes
- * Oculta las imágenes que no se pueden cargar para evitar iconos rotos
- * @param {Event} event - Evento de error de la imagen
+ * Maneja errores de carga de imágenes para mantener una UI limpia
+ * 
+ * Se ejecuta cuando una imagen no puede ser cargada (404, CORS, etc.)
+ * y oculta el elemento img para evitar mostrar el icono de "imagen rota"
+ * que degrada la experiencia del usuario.
+ * 
+ * ACCIONES REALIZADAS:
+ * - Oculta la imagen problemática
+ * - Mantiene el layout sin afectar otros elementos
+ * - Previene la degradación visual de la interfaz
+ * 
+ * @param {Event} event - Evento de error de carga de imagen
+ * @param {HTMLImageElement} event.target - El elemento img que falló al cargar
+ * 
+ * @example
+ * // En el template:
+ * // <img :src="imageUrl" @error="handleImageError" />
  */
 const handleImageError = (event) => {
-  // Oculta la imagen rota para mantener una apariencia limpia
-  event.target.style.display = 'none'
+  if (event && event.target) {
+    // Oculta la imagen rota para mantener una apariencia limpia
+    event.target.style.display = 'none'
+    
+    // Log para debugging en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Imagen no pudo ser cargada:', event.target.src)
+    }
+  }
 }
 </script>
 
+// ============================================================================
+// ESTILOS DEL COMPONENTE
+// ============================================================================
+
 /**
- * Estilos del componente
- * Utiliza CSS con scope para evitar conflictos con otros componentes
+ * Estilos con scope para el componente ItemGrid
+ * 
+ * CARACTERÍSTICAS:
+ * - Scoped CSS para evitar conflictos globales
+ * - Diseño responsivo y accesible
+ * - Soporte para modo oscuro
+ * - Transiciones suaves para mejor UX
+ * - Optimizado para diferentes dispositivos
  */
 <style scoped>
+/* ============================================================================ */
+/* IMPORTACIONES Y CONFIGURACIÓN BASE */
+/* ============================================================================ */
+
 /* Importación de estilos comunes del proyecto */
 @import '@/assets/styles/common.css';
 
+/* ============================================================================ */
+/* UTILIDADES DE TEXTO */
+/* ============================================================================ */
+
 /**
- * Clase para limitar texto a 2 líneas
- * Implementa truncamiento de texto con puntos suspensivos
+ * Clase para limitar texto a 2 líneas con ellipsis
+ * 
+ * FUNCIONALIDAD:
+ * - Trunca texto que excede 2 líneas
+ * - Añade puntos suspensivos (...) al final
+ * - Mantiene la altura consistente de las tarjetas
+ * - Mejora la legibilidad en espacios limitados
  */
 .line-clamp-2 {
   @apply text-truncate-2;
 }
 
+/* ============================================================================ */
+/* LAYOUT PRINCIPAL DE LA CUADRÍCULA */
+/* ============================================================================ */
+
 /**
- * Estilos para la cuadrícula de elementos
- * Asegura un espaciado consistente y responsivo
+ * Contenedor principal de la cuadrícula de elementos
+ * 
+ * CARACTERÍSTICAS:
+ * - Espaciado interno consistente
+ * - Base para el sistema de grid responsivo
+ * - Contenedor flexible para diferentes densidades de contenido
  */
 .item-grid {
   /* Espaciado interno para el contenedor principal */
   @apply p-4;
 }
 
+/* ============================================================================ */
+/* ESTILOS DE TARJETAS INDIVIDUALES */
+/* ============================================================================ */
+
 /**
- * Estilos para las tarjetas de elementos individuales
- * Mejora la interactividad y accesibilidad
+ * Estilos base para las tarjetas de elementos
+ * 
+ * FUNCIONALIDAD:
+ * - Transiciones suaves para interacciones
+ * - Base para efectos hover y focus
+ * - Preparación para animaciones de estado
  */
 .item-grid .bg-white {
-  /* Transición suave para efectos hover */
+  /* Transiciones suaves para efectos de interacción */
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 /**
- * Efecto hover para las tarjetas
- * Proporciona feedback visual al usuario
+ * Efectos de hover para las tarjetas
+ * 
+ * MEJORAS DE UX:
+ * - Elevación visual sutil (2px hacia arriba)
+ * - Sombra más pronunciada para profundidad
+ * - Feedback inmediato de interactividad
+ * - Transición suave para evitar saltos bruscos
  */
 .item-grid .bg-white:hover {
-  /* Elevación sutil de la tarjeta */
+  /* Elevación sutil de la tarjeta para efecto de profundidad */
   transform: translateY(-2px);
-  /* Sombra más pronunciada */
+  /* Sombra más pronunciada para enfatizar la elevación */
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* ============================================================================ */
+/* SOPORTE PARA MODO OSCURO */
+/* ============================================================================ */
+
 /**
- * Estilos para modo oscuro
- * Mantiene la consistencia visual en diferentes temas
+ * Adaptaciones para el tema oscuro
+ * 
+ * CARACTERÍSTICAS:
+ * - Fondo oscuro para tarjetas
+ * - Mantiene la legibilidad y contraste
+ * - Consistencia visual con el tema global
+ * - Transiciones automáticas entre temas
  */
 .dark .item-grid .bg-white {
   /* Fondo oscuro para tarjetas en modo oscuro */
   @apply bg-gray-800;
 }
 
+/* ============================================================================ */
+/* DISEÑO RESPONSIVO */
+/* ============================================================================ */
+
 /**
- * Estilos responsivos para diferentes tamaños de pantalla
- * Asegura una experiencia óptima en todos los dispositivos
+ * Adaptaciones para dispositivos móviles (pantallas ≤ 640px)
+ * 
+ * OPTIMIZACIONES MÓVILES:
+ * - Reducción del espaciado para maximizar contenido visible
+ * - Ajuste de gaps para mejor aprovechamiento del espacio
+ * - Mantenimiento de la usabilidad en pantallas táctiles
+ * - Optimización de la densidad de información
  */
 @media (max-width: 640px) {
   .item-grid {
-    /* Reducir espaciado en pantallas pequeñas */
+    /* Reducir espaciado interno en pantallas pequeñas para maximizar contenido */
     @apply p-2;
   }
   
   .grid {
-    /* Reducir espaciado entre elementos en móviles */
+    /* Reducir espaciado entre elementos en móviles para mejor aprovechamiento */
     gap: 1rem;
+  }
+  
+  /* Ajustes adicionales para tarjetas en móviles */
+  .item-grid .bg-white:hover {
+    /* Reducir efecto hover en móviles para evitar problemas táctiles */
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/**
+ * Adaptaciones para tablets (pantallas 641px - 1024px)
+ * 
+ * OPTIMIZACIONES TABLET:
+ * - Espaciado intermedio entre móvil y desktop
+ * - Aprovechamiento óptimo del espacio disponible
+ * - Mantenimiento de la legibilidad y usabilidad
+ */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .item-grid {
+    /* Espaciado intermedio para tablets */
+    @apply p-3;
+  }
+  
+  .grid {
+    /* Gap optimizado para tablets */
+    gap: 1.25rem;
+  }
+}
+
+/**
+ * Adaptaciones para pantallas grandes (≥ 1025px)
+ * 
+ * OPTIMIZACIONES DESKTOP:
+ * - Espaciado completo para mejor presentación
+ * - Efectos hover más pronunciados
+ * - Aprovechamiento del espacio adicional
+ */
+@media (min-width: 1025px) {
+  .item-grid {
+    /* Espaciado completo en pantallas grandes */
+    @apply p-6;
+  }
+  
+  .grid {
+    /* Gap amplio para mejor separación visual */
+    gap: 2rem;
   }
 }
 

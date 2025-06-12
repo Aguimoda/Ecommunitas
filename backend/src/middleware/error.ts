@@ -1,21 +1,49 @@
-import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/app-error';
+/**
+ * @file error.ts
+ * @description Middleware centralizado para manejo de errores
+ * @module Middleware/ErrorHandler
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este middleware proporciona:
+ * - Manejo centralizado de todos los errores de la aplicación
+ * - Transformación de errores de Mongoose a formato estándar
+ * - Respuestas de error consistentes
+ * - Logging de errores para debugging
+ * - Ocultación de detalles sensibles en producción
+ */
 
-interface ErrorResponse {
-  success: boolean;
-  error: string;
-  message?: string;
-}
+import { Request, Response, NextFunction } from 'express';
+import ErrorResponse from '../utils/errorResponse';
 
 /**
- * Simple error handler middleware - maintains original simplicity
+ * Middleware de manejo centralizado de errores
+ * 
+ * @function errorHandler
+ * @param {any} err - Error capturado
+ * @param {Request} req - Objeto de solicitud de Express
+ * @param {Response} res - Objeto de respuesta de Express
+ * @param {NextFunction} next - Función next de Express
+ * 
+ * @description
+ * Maneja diferentes tipos de errores:
+ * - CastError de Mongoose (ID inválido)
+ * - Errores de duplicación (código 11000)
+ * - Errores de validación de Mongoose
+ * - Errores personalizados de ErrorResponse
+ * - Errores genéricos del servidor
+ * 
+ * @example
+ * ```typescript
+ * // En app.ts
+ * app.use(errorHandler);
+ * 
+ * // Los errores se capturan automáticamente:
+ * throw new ErrorResponse('Usuario no encontrado', 404);
+ * ```
  */
-export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   let error = { ...err };
   error.message = err.message;
 
@@ -27,19 +55,19 @@ export const errorHandler = (
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
     const message = `Resource not found with id of ${err.value}`;
-    error = new AppError(message, 404);
+    error = new ErrorResponse(message, 404);
   }
 
   // Mongoose duplicate key
   if (err.code === 11000) {
     const message = 'Duplicate field value entered';
-    error = new AppError(message, 400);
+    error = new ErrorResponse(message, 400);
   }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const message = Object.values(err.errors).map((val: any) => val.message);
-    error = new AppError(message.join(', '), 400);
+    error = new ErrorResponse(message.join(', '), 400);
   }
 
   res.status(error.statusCode || 500).json({
@@ -75,7 +103,7 @@ export const handleUncaughtException = (): void => {
  */
 export const handleUndefinedRoutes = (req: Request, res: Response, next: NextFunction): void => {
   const message = `Can't find ${req.originalUrl} on this server!`;
-  next(new AppError(message, 404));
+  next(new ErrorResponse(message, 404));
 };
 
 // Async error wrapper
@@ -120,7 +148,7 @@ export const handleDatabaseError = (err: any): void => {
 
 // Rate limit error handler
 export const handleRateLimitError = (req: Request, res: Response): void => {
-  const errorResponse: ErrorResponse = {
+  const errorResponse = {
     success: false,
     error: 'Too many requests, please try again later',
     message: 'Rate limit exceeded'
@@ -131,7 +159,7 @@ export const handleRateLimitError = (req: Request, res: Response): void => {
 
 // CORS error handler
 export const handleCORSError = (req: Request, res: Response): void => {
-  const errorResponse: ErrorResponse = {
+  const errorResponse = {
     success: false,
     error: 'CORS policy violation',
     message: 'Origin not allowed'

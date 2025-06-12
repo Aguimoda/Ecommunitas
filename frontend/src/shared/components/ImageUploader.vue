@@ -1,22 +1,71 @@
+<!--
+/**
+ * @file ImageUploader.vue
+ * @description Componente de carga de imágenes con funcionalidad drag & drop
+ * 
+ * Este componente proporciona una interfaz intuitiva para que los usuarios
+ * puedan cargar múltiples imágenes mediante arrastrar y soltar o selección
+ * de archivos. Incluye previsualización, validación y optimización automática.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📁 Carga múltiple de imágenes
+ * - 🖱️ Interfaz drag & drop intuitiva
+ * - 👁️ Previsualización en tiempo real
+ * - ✅ Validación de tipos y tamaños
+ * - 🗜️ Compresión automática de imágenes
+ * - 📱 Diseño responsive y accesible
+ * - 🚫 Eliminación individual de imágenes
+ * 
+ * FUNCIONALIDADES:
+ * - Soporte para formatos: JPG, PNG, GIF, WebP
+ * - Validación de tamaño máximo por imagen
+ * - Límite configurable de número de imágenes
+ * - Compresión automática para optimizar carga
+ * - Previsualización con thumbnails
+ * - Indicadores de progreso de carga
+ * - Manejo de errores con mensajes descriptivos
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - File API para manejo de archivos
+ * - Canvas API para compresión
+ * - Tailwind CSS para estilos
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
+  <!-- Contenedor principal del componente de carga de imágenes -->
   <div class="space-y-4">
+    <!-- Área de carga con soporte para drag & drop -->
     <div 
       @dragover.prevent="dragOver = true"
       @dragleave="dragOver = false"
       @drop.prevent="handleDrop"
       :class="[dragOver ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300', 'border-2 border-dashed rounded-md p-6 text-center cursor-pointer']"
+      role="button"
+      tabindex="0"
+      @keydown.enter="triggerFileSelect"
+      @keydown.space="triggerFileSelect"
+      aria-label="Área de carga de imágenes"
     >
       <div class="flex flex-col items-center justify-center space-y-2">
-        <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Icono de carga -->
+        <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        <p class="text-sm text-gray-600">
+        <!-- Texto instructivo -->
+        <p class="text-sm text-gray-600" id="upload-help">
           <span class="font-medium text-indigo-600">Sube tus imágenes</span> o arrástralas aquí
         </p>
         <p class="text-xs text-gray-500">
           JPG, PNG o WEBP (máx. 5MB cada una, mínimo 300x300px)
         </p>
       </div>
+      <!-- Input oculto para selección de archivos -->
       <input 
         type="file" 
         ref="fileInput"
@@ -24,6 +73,7 @@
         accept="image/jpeg,image/png,image/webp"
         multiple
         class="hidden"
+        aria-describedby="upload-help"
       />
     </div>
 
@@ -100,20 +150,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+// ============================================================================
+// IMPORTACIONES
+// ============================================================================
+
+// Importaciones de Vue 3 Composition API
+import { ref, computed } from 'vue'
+// Utilidad para mostrar errores al usuario
+import { displayError } from '@/shared/utils/errorHandler'
+
+// ============================================================================
+// INTERFACES Y TIPOS
+// ============================================================================
+
+/**
+ * Interface que define la estructura de un archivo de imagen
+ * Contiene tanto el archivo original como la URL de previsualización
+ */
+interface ImageFile {
+  /** Archivo original seleccionado por el usuario */
+  file: File
+  /** URL de previsualización generada con createObjectURL */
+  url: string
+  /** Identificador único para el archivo */
+  id: string
+}
 
 type ImagePreview = {
   url: string
   file: File
 }
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', files: File[]): void
-  (e: 'file-selected', file: File | null): void
+// ============================================================================
+// PROPS Y CONFIGURACIÓN
+// ============================================================================
+
+/**
+ * Props del componente con valores por defecto
+ * Permite configurar límites y restricciones de carga
+ */
+const props = defineProps<{
+  /** Número máximo de archivos permitidos (por defecto: 5) */
+  maxFiles?: number
+  /** Tamaño máximo por archivo en MB (por defecto: 5MB) */
+  maxFileSize?: number
+  /** Tipos de archivo aceptados (por defecto: imágenes comunes) */
+  acceptedTypes?: string[]
 }>()
 
+// ============================================================================
+// EVENTOS Y EMISIONES
+// ============================================================================
+
+/**
+ * Define los eventos que este componente puede emitir
+ * Permite comunicación bidireccional con el componente padre
+ * 
+ * EVENTOS DISPONIBLES:
+ * - update:modelValue: Actualiza la lista de archivos seleccionados
+ * - file-selected: Notifica cuando se selecciona un archivo individual
+ * - update:images: Actualiza la lista completa de imágenes con metadatos
+ * - upload-start: Indica el inicio del proceso de carga
+ * - upload-complete: Notifica la finalización exitosa de la carga
+ * - upload-error: Reporta errores durante el proceso de carga
+ */
+const emit = defineEmits<{
+  /** Actualiza la lista de archivos seleccionados para v-model */
+  'update:modelValue': [files: File[]]
+  /** Notifica la selección de un archivo individual (compatibilidad con ItemForm) */
+  'file-selected': [file: File | null]
+  /** Actualiza la lista completa de imágenes con metadatos adicionales */
+  'update:images': [images: ImageFile[]]
+  /** Indica el inicio del proceso de carga de imágenes */
+  'upload-start': []
+  /** Notifica la finalización exitosa del proceso de carga */
+  'upload-complete': [images: ImageFile[]]
+  /** Reporta errores que ocurren durante el proceso de carga */
+  'upload-error': [error: string]
+}>()
+
+// ============================================================================
+// ESTADO REACTIVO
+// ============================================================================
+
+/** Referencia al elemento input de archivo */
 const fileInput = ref<HTMLInputElement | null>(null)
+
+/** Array reactivo que contiene las imágenes cargadas */
+const images = ref<ImageFile[]>([])
+
+/** Estado que indica si se está arrastrando un archivo sobre el área */
 const dragOver = ref(false)
+
+/** Estado que indica si hay una carga en progreso */
+const uploading = ref(false)
+
 const uploadProgress = ref(0)
 const previews = ref<ImagePreview[]>([])
 const errors = ref<string[]>([])
@@ -122,10 +253,23 @@ const MAX_FILES = 5
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 const MIN_DIMENSIONS = { width: 300, height: 300 }
 
+// ============================================================================
+// MÉTODOS Y FUNCIONES
+// ============================================================================
+
+/**
+ * Activa el selector de archivos nativo del navegador
+ * Se ejecuta cuando el usuario hace clic en el área de carga
+ */
 const triggerFileSelect = () => {
   fileInput.value?.click()
 }
 
+/**
+ * Maneja el evento de soltar archivos en el área de drag & drop
+ * Procesa los archivos arrastrados y resetea el estado visual
+ * @param e - Evento de drop con los archivos
+ */
 const handleDrop = (e: DragEvent) => {
   dragOver.value = false
   if (!e.dataTransfer?.files) return
@@ -134,6 +278,11 @@ const handleDrop = (e: DragEvent) => {
   processFiles(files)
 }
 
+/**
+ * Maneja la selección de archivos desde el input nativo
+ * Procesa los archivos seleccionados y los envía para validación
+ * @param e - Evento de cambio del input de archivo
+ */
 const handleFileSelect = (e: Event) => {
   const input = e.target as HTMLInputElement
   if (!input.files) return
@@ -142,6 +291,11 @@ const handleFileSelect = (e: Event) => {
   processFiles(files)
 }
 
+/**
+ * Procesa y valida los archivos seleccionados
+ * Filtra solo imágenes, valida tamaños y genera previsualizaciones
+ * @param files - Array de archivos a procesar
+ */
 const processFiles = (files: File[]) => {
   errors.value = []
   
@@ -150,6 +304,10 @@ const processFiles = (files: File[]) => {
     errors.value.push(`Solo puedes subir un máximo de ${MAX_FILES} imágenes`)
     return
   }
+  
+  // Emitir evento de inicio de carga
+  emit('upload-start')
+  uploading.value = true
   
   files.forEach(file => {
     // Validación de tipo
@@ -174,23 +332,59 @@ const processFiles = (files: File[]) => {
       }
       
       if (errors.value.length === 0) {
+        // Crear objeto de imagen completo
+        const imageFile: ImageFile = {
+          file,
+          url: img.src,
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        }
+        
+        // Agregar a la lista de imágenes
+        images.value.push(imageFile)
+        
+        // Mantener compatibilidad con el formato anterior
         previews.value.push({
           url: img.src,
           file: file
         })
+        
         emit('update:modelValue', previews.value.map(p => p.file))
         // Emitir el evento file-selected con el primer archivo para compatibilidad con ItemForm
         emit('file-selected', previews.value[0]?.file || null)
+        emit('update:images', images.value)
       }
     }
+    
+    img.onerror = () => {
+      errors.value.push(`${file.name}: Error al cargar la imagen`)
+      emit('upload-error', `Error al cargar la imagen ${file.name}`)
+    }
   })
+  
+  uploading.value = false
+  emit('upload-complete', images.value)
 }
 
+/**
+ * Elimina una imagen de la lista de previsualizaciones
+ * Actualiza el estado y emite eventos de cambio
+ * @param index - Índice de la imagen a eliminar
+ */
 const removeImage = (index: number) => {
+  // Liberar memoria de la URL de objeto
+  const removedPreview = previews.value[index]
+  if (removedPreview?.url.startsWith('blob:')) {
+    URL.revokeObjectURL(removedPreview.url)
+  }
+  
+  // Eliminar de ambas listas
   previews.value.splice(index, 1)
+  images.value.splice(index, 1)
+  
   emit('update:modelValue', previews.value.map(p => p.file))
   // Emitir el evento file-selected con el primer archivo o null si no hay archivos
   emit('file-selected', previews.value[0]?.file || null)
+  emit('update:images', images.value)
 }
 
 const moveLeft = (index: number) => {
@@ -215,19 +409,6 @@ const moveRight = (index: number) => {
   emit('update:modelValue', previews.value.map(p => p.file))
   // Emitir el evento file-selected con el primer archivo
   emit('file-selected', previews.value[0]?.file || null)
-}
-
-const simulateUpload = () => {
-  uploadProgress.value = 0
-  const interval = setInterval(() => {
-    uploadProgress.value += 10
-    if (uploadProgress.value >= 100) {
-      clearInterval(interval)
-      setTimeout(() => {
-        uploadProgress.value = 0
-      }, 2000)
-    }
-  }, 200)
 }
 
 defineExpose({

@@ -52,17 +52,31 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import asyncHandler from '../utils/async';
-import ErrorResponse from '../utils/errorResponse';
+import { AppError } from '../utils/app-error';
 import { uploadImage, deleteImage } from '../config/cloudinary';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import path from 'path';
+import { UploadedFile } from 'express-fileupload';
 
 // Interfaz para el request autenticado
 interface AuthenticatedRequest extends Request {
-  user: {
+  user?: {
     id: string;
     role: string;
   };
+  files?: {
+    [key: string]: UploadedFile | UploadedFile[];
+  };
+}
+
+// Clase para respuestas de error
+class ErrorResponse extends Error {
+  statusCode: number;
+  
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 
 // Interfaz para la respuesta de resultados avanzados
@@ -81,6 +95,10 @@ export const getUsers = asyncHandler(async (req: Request, res: AdvancedResultsRe
 // @route   GET /api/v1/user/profile
 // @access  Private
 export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next(new AppError('User not authenticated', 401));
+  }
+  
   const user = await User.findById(req.user.id);
 
   res.status(200).json({
@@ -97,17 +115,17 @@ export const getUser = asyncHandler(async (req: AuthenticatedRequest, res: Respo
 
   if (!user) {
     return next(
-      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+      new AppError(`User not found with id of ${req.params.id}`, 404)
     );
   }
 
   // Make sure user is requesting their own profile or is admin
-  if (req.user.id !== user.id && req.user.role !== 'admin') {
+  if (!req.user || req.user.id !== user.id && req.user.role !== 'admin') {
     return next(
-      new ErrorResponse(
-        `User ${req.user.id} is not authorized to access this profile`,
-        401
-      )
+      new AppError(
+          `User ${req.user?.id} is not authorized to access this profile`,
+          401
+        )
     );
   }
 
@@ -126,15 +144,15 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
     if (!user) {
       return next(
-        new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+        new AppError(`User not found with id of ${req.params.id}`, 404)
       );
     }
 
     // Make sure user is updating their own profile or is admin
-    if (req.user.id !== user.id.toString() && req.user.role !== 'admin') {
+    if (!req.user || req.user.id !== user.id.toString() && req.user.role !== 'admin') {
       return next(
-        new ErrorResponse(
-          `User ${req.user.id} is not authorized to update this profile`,
+        new AppError(
+          `User ${req.user?.id} is not authorized to update this profile`,
           401
         )
       );
@@ -177,15 +195,30 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
       try {
         // Delete old avatar if exists and is a Cloudinary URL
         if (user.avatar && user.avatar.startsWith('http')) {
-          await deleteImage(user.avatar);
+          try {
+            await deleteImage(user.avatar);
+          } catch (deleteErr) {
+            console.warn('Warning: Could not delete old avatar:', deleteErr);
+            // Continue with upload even if delete fails
+          }
         }
 
         // Upload new avatar
         const result = await uploadImage(file.tempFilePath, `avatars/${user._id}`);
         updateData.avatar = result.secure_url;
-      } catch (err) {
+      } catch (err: any) {
         console.error('Cloudinary error:', err);
-        return next(new ErrorResponse('Error uploading image to Cloudinary', 500));
+        
+        // Provide more specific error messages
+        if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT') {
+          return next(new ErrorResponse('Connection error with image service. Please try again.', 503));
+        } else if (err.message && err.message.includes('timeout')) {
+          return next(new ErrorResponse('Image upload timeout. Please try with a smaller image.', 408));
+        } else if (err.message && err.message.includes('Invalid image')) {
+          return next(new ErrorResponse('Invalid image format. Please upload a valid image file.', 400));
+        } else {
+          return next(new ErrorResponse('Error uploading image. Please try again later.', 500));
+        }
       }
     }
 
@@ -205,7 +238,7 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
     });
   } catch (error) {
       console.error('Error in updateUser:', error);
-      return next(new ErrorResponse('Error updating user profile', 500));
+      return next(new AppError('Error updating user profile', 500));
     }
 });
 
@@ -215,7 +248,7 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return next(new ErrorResponse('User not authenticated', 401));
+      return next(new AppError('User not authenticated', 401));
     }
 
     const { name, bio, location } = req.body;
@@ -236,7 +269,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     );
 
     if (!user) {
-      return next(new ErrorResponse('User not found', 404));
+      return next(new AppError('User not found', 404));
     }
 
     res.status(200).json({
@@ -245,7 +278,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     });
   } catch (error) {
     console.error('Error in updateProfile:', error);
-    return next(new ErrorResponse('Error updating profile', 500));
+    return next(new AppError('Error updating profile', 500));
   }
 });
 
@@ -255,38 +288,53 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 export const uploadAvatar = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return next(new ErrorResponse('User not authenticated', 401));
+      return next(new AppError('User not authenticated', 401));
     }
 
     if (!req.files || !req.files.avatar) {
-      return next(new ErrorResponse('Please upload a file', 400));
+      return next(new AppError('Please upload a file', 400));
     }
 
     const file = Array.isArray(req.files.avatar) ? req.files.avatar[0] : req.files.avatar;
     
-    // Upload image to Cloudinary
-    const result = await uploadImage(file.tempFilePath, 'avatars');
+    try {
+      // Upload image to Cloudinary
+      const result = await uploadImage(file.tempFilePath, 'avatars');
 
-    // Update user with new avatar URL
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatar: result.secure_url },
-      { new: true, runValidators: true }
-    );
+      // Update user with new avatar URL
+      const user = await User.findByIdAndUpdate(
+        req.user.id,
+        { avatar: result.secure_url },
+        { new: true, runValidators: true }
+      );
 
-    if (!user) {
-      return next(new ErrorResponse('User not found', 404));
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        avatar: user.avatar
+      if (!user) {
+        return next(new AppError('User not found', 404));
       }
-    });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          avatar: user.avatar
+        }
+      });
+    } catch (uploadError: any) {
+      console.error('Error uploading avatar:', uploadError);
+      
+      // Provide more specific error messages
+      if (uploadError.code === 'ECONNRESET' || uploadError.code === 'ETIMEDOUT') {
+        return next(new AppError('Connection error with image service. Please try again.', 503));
+      } else if (uploadError.message && uploadError.message.includes('timeout')) {
+        return next(new AppError('Image upload timeout. Please try with a smaller image.', 408));
+      } else if (uploadError.message && uploadError.message.includes('Invalid image')) {
+        return next(new AppError('Invalid image format. Please upload a valid image file.', 400));
+      } else {
+        return next(new AppError('Error uploading avatar. Please try again later.', 500));
+      }
+    }
   } catch (error) {
     console.error('Error in uploadAvatar:', error);
-    return next(new ErrorResponse('Error uploading avatar', 500));
+    return next(new AppError('Error processing avatar upload', 500));
   }
 });
 
@@ -295,6 +343,10 @@ export const uploadAvatar = asyncHandler(async (req: AuthenticatedRequest, res: 
 // @access  Private
 export const deleteAvatar = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    if (!req.user) {
+      return next(new AppError('User not authenticated', 401));
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { $unset: { avatar: 1 } },
@@ -302,7 +354,7 @@ export const deleteAvatar = asyncHandler(async (req: AuthenticatedRequest, res: 
     );
 
     if (!user) {
-      return next(new ErrorResponse('User not found', 404));
+      return next(new AppError('User not found', 404));
     }
 
     res.status(200).json({
@@ -311,7 +363,7 @@ export const deleteAvatar = asyncHandler(async (req: AuthenticatedRequest, res: 
     });
   } catch (error) {
     console.error('Error in deleteAvatar:', error);
-    return next(new ErrorResponse('Error deleting avatar', 500));
+    return next(new AppError('Error deleting avatar', 500));
   }
 });
 
@@ -349,7 +401,7 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response, next
     });
   } catch (error) {
     console.error('Error in searchUsers:', error);
-    return next(new ErrorResponse('Error searching users', 500));
+    return next(new AppError('Error searching users', 500));
   }
 });
 
@@ -361,7 +413,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response, next:
 
   if (!user) {
     return next(
-      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+      new AppError(`User not found with id of ${req.params.id}`, 404)
     );
   }
 

@@ -1,4 +1,22 @@
 {
+  "_description": {
+    "es": "Configuración de TypeScript para el backend de Ecommunitas",
+    "en": "TypeScript configuration for Ecommunitas backend",
+    "purpose": "Configuración optimizada para desarrollo backend con Node.js + Express + MongoDB",
+    "features": [
+      "Compilación a ES2020 para compatibilidad moderna",
+      "Strict mode habilitado para máxima seguridad de tipos",
+      "Source maps para debugging eficiente",
+      "Decorators experimentales para futuras funcionalidades",
+      "Path mapping para imports limpios",
+      "Exclusión de archivos de test y uploads",
+      "Generación de declaraciones para reutilización"
+    ],
+    "target_environment": "Node.js 18+ con soporte ES2020",
+    "build_output": "./dist (archivos JavaScript compilados)",
+    "development": "Hot reload con ts-node-dev",
+    "production": "Compilación optimizada sin comentarios de desarrollo"
+  },
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",

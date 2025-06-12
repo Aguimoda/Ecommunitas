@@ -1,3 +1,63 @@
+<!--
+/**
+ * @file EditItemModal.vue
+ * @description Modal para editar artículos existentes en Ecommunitas
+ * 
+ * Este componente proporciona una interfaz modal completa para la edición
+ * de artículos existentes. Permite modificar todos los campos del artículo
+ * incluyendo título, descripción, precio, ubicación e imágenes, con
+ * validación en tiempo real y gestión de estados.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 📝 Formulario completo de edición
+ * - 🖼️ Gestión avanzada de imágenes
+ * - ✅ Validación en tiempo real
+ * - 💾 Guardado automático de cambios
+ * - 🔄 Estados de carga y error
+ * - 📱 Diseño responsive
+ * - ♿ Accesibilidad completa
+ * 
+ * FUNCIONALIDADES:
+ * - Edición de todos los campos del artículo
+ * - Subida y eliminación de imágenes
+ * - Previsualización de imágenes
+ * - Validación de formulario
+ * - Manejo de errores de validación
+ * - Confirmación antes de guardar cambios
+ * - Cancelación con confirmación si hay cambios
+ * 
+ * GESTIÓN DE IMÁGENES:
+ * - Visualización de imágenes existentes
+ * - Eliminación de imágenes actuales
+ * - Subida de nuevas imágenes
+ * - Previsualización antes de guardar
+ * - Validación de formato y tamaño
+ * - Compresión automática de imágenes
+ * 
+ * VALIDACIONES:
+ * - Campos obligatorios
+ * - Formato de precio válido
+ * - Longitud mínima/máxima de texto
+ * - Formato de imágenes permitidas
+ * - Tamaño máximo de archivos
+ * 
+ * EVENTOS EMITIDOS:
+ * - close: Cierra el modal
+ * - updated: Artículo actualizado exitosamente
+ * - error: Error en la actualización
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Validación de formularios
+ * - Gestión de archivos
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-screen overflow-y-auto">

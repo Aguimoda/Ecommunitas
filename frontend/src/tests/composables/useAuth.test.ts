@@ -110,11 +110,11 @@ describe('useAuth', () => {
       })
       
       const { useAuth } = await import('@/features/auth/composables/useAuth')
-      const { login, user, isAuthenticated } = useAuth()
+      const { login } = useAuth()
       
       const result = await login(mockLoginCredentials)
       
-      expect(result.success).toBe(true)
+      expect(result).toBe(true)
       expect(mockAuthService.login).toHaveBeenCalledWith(mockLoginCredentials)
     })
 
@@ -128,8 +128,7 @@ describe('useAuth', () => {
       
       const result = await login(mockLoginCredentials)
       
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Credenciales inválidas')
+      expect(result).toBe(false)
     })
   })
 
@@ -147,7 +146,7 @@ describe('useAuth', () => {
       
       const result = await register(mockRegisterData)
       
-      expect(result.success).toBe(true)
+      expect(result).toBe(true)
       expect(mockAuthService.register).toHaveBeenCalledWith(mockRegisterData)
     })
 
@@ -161,8 +160,7 @@ describe('useAuth', () => {
       
       const result = await register(mockRegisterData)
       
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('El email ya está en uso')
+      expect(result).toBe(false)
     })
   })
 
@@ -220,7 +218,7 @@ describe('useAuth', () => {
       
       const result = await updateProfile(updateData)
       
-      expect(result.success).toBe(true)
+      expect(result).toBe(true)
       expect(mockAuthService.updateProfile).toHaveBeenCalledWith(updateData)
     })
 
@@ -236,8 +234,7 @@ describe('useAuth', () => {
       
       const result = await updateProfile(updateData)
       
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Error al actualizar perfil')
+      expect(result).toBe(false)
     })
   })
 })

@@ -1,3 +1,80 @@
+/**
+ * @fileoverview Servidor principal de la aplicación Ecommunitas
+ * 
+ * Este archivo configura y ejecuta el servidor Express para la aplicación Ecommunitas,
+ * una plataforma de intercambio comunitario. Incluye configuración de middleware,
+ * rutas de API, manejo de errores, seguridad CSP y logging.
+ * 
+ * @description Características principales:
+ * - **Configuración Express**: Servidor web con middleware esencial
+ * - **Seguridad**: CORS, rate limiting, CSP reporting
+ * - **Base de Datos**: Conexión automática a MongoDB
+ * - **Logging**: Sistema de logs con Winston para desarrollo y producción
+ * - **Carga de Archivos**: Middleware para manejo de uploads
+ * - **API RESTful**: Rutas organizadas por módulos (auth, users, items, messages)
+ * - **Manejo de Errores**: Middleware centralizado para errores
+ * - **CSP Reports**: Endpoint especializado para reportes de Content Security Policy
+ * 
+ * @architecture
+ * ```
+ * server.js
+ * ├── Configuración inicial
+ * │   ├── Variables de entorno
+ * │   ├── Conexión a base de datos
+ * │   └── Inicialización Express
+ * ├── Middleware
+ * │   ├── Body parser (JSON)
+ * │   ├── CORS
+ * │   ├── Morgan (logging desarrollo)
+ * │   ├── File upload
+ * │   └── Rate limiting
+ * ├── Logging
+ * │   ├── CSP logger (Winston)
+ * │   └── Archivos de log
+ * ├── Rutas API
+ * │   ├── /api/v1/auth
+ * │   ├── /api/v1/users
+ * │   ├── /api/v1/items
+ * │   └── /api/v1/messages
+ * ├── Manejo de errores
+ * └── Configuración del servidor
+ * ```
+ * 
+ * @security
+ * - Rate limiting para CSP reports (10 req/min por IP)
+ * - Validación de Content-Type para CSP reports
+ * - CORS habilitado para requests cross-origin
+ * - Logging de violaciones CSP con detalles de seguridad
+ * 
+ * @performance
+ * - Logging condicional en desarrollo
+ * - Rate limiting para prevenir spam
+ * - Manejo eficiente de errores
+ * - Logs estructurados en JSON
+ * 
+ * @example
+ * ```bash
+ * # Desarrollo
+ * NODE_ENV=development npm start
+ * 
+ * # Producción
+ * NODE_ENV=production npm start
+ * ```
+ * 
+ * @requires express - Framework web para Node.js
+ * @requires dotenv - Carga variables de entorno
+ * @requires morgan - HTTP request logger
+ * @requires colors - Colores para terminal
+ * @requires cors - Cross-Origin Resource Sharing
+ * @requires express-rate-limit - Rate limiting middleware
+ * @requires winston - Logger profesional
+ * @requires uuid - Generador de UUIDs
+ * 
+ * @author Equipo Ecommunitas
+ * @version 1.0.0
+ * @since 2024
+ */
+
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
@@ -6,9 +83,9 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { createLogger, transports, format } = require('winston');
 const { v4: uuidv4 } = require('uuid');
-const connectDB = require('./config/db');
-const errorHandler = require('./middleware/error');
-const fileUploadMiddleware = require('./middleware/fileUpload');
+const connectDB = require('./src/config/db');
+const errorHandler = require('./src/middleware/error');
+const fileUploadMiddleware = require('./src/middleware/fileUpload');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -95,10 +172,10 @@ app.post('/csp-report', cspRateLimiter, (req, res) => {
 });
 
 // Route files
-const auth = require('./routes/auth');
-const users = require('./routes/users');
-const items = require('./routes/items'); // Controlador principal de items
-const messages = require('./routes/messages');
+const auth = require('./src/routes/auth');
+const users = require('./src/routes/users');
+const items = require('./src/routes/items'); // Controlador principal de items
+const messages = require('./src/routes/messages');
 
 // Mount routers
 app.use('/api/v1/auth', auth);

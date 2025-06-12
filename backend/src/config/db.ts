@@ -1,3 +1,19 @@
+/**
+ * @file db.ts
+ * @description Configuración y conexión a la base de datos MongoDB
+ * @module Config/Database
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona:
+ * - Conexión optimizada a MongoDB con pooling de conexiones
+ * - Configuración de índices automática
+ * - Logging detallado de operaciones de base de datos
+ * - Manejo de errores de conexión y reconexión automática
+ * - Configuración de timeouts y opciones de rendimiento
+ */
+
 import mongoose from 'mongoose';
 import 'colors';
 import { createLogger, format, transports } from 'winston';
@@ -35,7 +51,30 @@ const dbLogger = createLogger({
 // Import the setupIndexes function
 import { setupIndexes } from './db-indexes';
 
-// Connect to MongoDB
+/**
+ * Establece conexión a MongoDB con configuración optimizada
+ * 
+ * @async
+ * @function connectDB
+ * @returns {Promise<void>} Promise que se resuelve cuando la conexión es exitosa
+ * @throws {Error} Termina el proceso si falla la conexión
+ * 
+ * @description
+ * Características principales:
+ * - Pool de conexiones configurado (2-10 conexiones)
+ * - Timeouts optimizados para producción
+ * - Reconexión automática en caso de desconexión
+ * - Configuración automática de índices de base de datos
+ * - Logging detallado de eventos de conexión
+ * - Validación y corrección automática de URI de MongoDB
+ * 
+ * @example
+ * ```typescript
+ * // En server.ts
+ * await connectDB();
+ * console.log('Base de datos conectada');
+ * ```
+ */
 const connectDB = async () => {
   try {
     // Connection options for MongoDB with connection pooling
@@ -78,8 +117,13 @@ const connectDB = async () => {
 
   } catch (err: any) {
     dbLogger.error(`Error connecting to MongoDB: ${err.message}`.red);
-    // Exit process with failure
-    process.exit(1);
+    // Exit process with failure only if not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    } else {
+      // In test environment, just throw the error instead of exiting
+      throw err;
+    }
   }
 };
 

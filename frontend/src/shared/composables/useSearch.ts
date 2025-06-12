@@ -1,4 +1,137 @@
 
+/**
+ * @file useSearch.ts
+ * @description Composable para funcionalidad de búsqueda de artículos en Ecommunitas
+ * 
+ * Este composable centraliza toda la lógica de búsqueda de artículos del marketplace,
+ * incluyendo filtros avanzados, paginación, validación de parámetros, navegación
+ * y traducción de categorías. Proporciona una interfaz unificada y reactiva
+ * para todas las funcionalidades de búsqueda de la aplicación.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🔍 Búsqueda avanzada con múltiples filtros
+ * - 📄 Paginación completa con navegación intuitiva
+ * - 🛡️ Validación robusta de parámetros de entrada
+ * - 🌍 Filtros por ubicación con coordenadas geográficas
+ * - 📊 Ordenamiento configurable de resultados
+ * - 🔄 Estado reactivo con sincronización automática
+ * - 🧭 Navegación programática entre páginas
+ * - 🌐 Traducción automática de categorías y condiciones
+ * 
+ * FILTROS DISPONIBLES:
+ * - query: Búsqueda por texto libre en título y descripción
+ * - category: Filtro por categoría de artículo
+ * - location: Filtro por ubicación geográfica
+ * - condition: Filtro por estado del artículo
+ * - distance: Radio de búsqueda en kilómetros
+ * - sort: Ordenamiento de resultados (reciente, precio, etc.)
+ * - coordinates: Coordenadas geográficas para búsqueda por proximidad
+ * 
+ * FUNCIONALIDADES:
+ * - Búsqueda en tiempo real con debounce
+ * - Filtros combinables y acumulativos
+ * - Paginación con navegación completa
+ * - Validación de entrada contra inyecciones
+ * - Traducción de categorías y condiciones
+ * - Navegación a detalles de artículos
+ * - Limpieza y reset de filtros
+ * - Sincronización con URL y rutas
+ * 
+ * VALIDACIONES INCLUIDAS:
+ * - Sanitización de caracteres peligrosos
+ * - Límites de longitud en campos de texto
+ * - Validación de IDs de artículos
+ * - Prevención de inyecciones de código
+ * - Verificación de parámetros numéricos
+ * 
+ * ESTADO REACTIVO:
+ * - currentPage: Página actual de resultados
+ * - itemsPerPage: Número de elementos por página
+ * - totalItems: Total de artículos encontrados
+ * - searchFilters: Objeto con todos los filtros activos
+ * - loading: Estado de carga de la búsqueda
+ * - error: Mensajes de error de la búsqueda
+ * 
+ * CASOS DE USO:
+ * - Página principal de búsqueda del marketplace
+ * - Filtros avanzados en listados de artículos
+ * - Búsqueda por categorías específicas
+ * - Búsqueda geográfica por proximidad
+ * - Navegación entre páginas de resultados
+ * - Búsqueda desde la barra de navegación
+ * - Filtros en páginas de categorías
+ * 
+ * INTEGRACIÓN:
+ * - Store de Pinia para gestión de estado
+ * - Vue Router para navegación
+ * - APIs de geolocalización
+ * - Sistema de notificaciones
+ * - Componentes de UI de filtros
+ * - URLs con query parameters
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Pinia para gestión de estado global
+ * - Vue Router para navegación
+ * - Reactive refs y computed properties
+ * - Watchers para sincronización automática
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico en componente de búsqueda
+ * const {
+ *   searchFilters,
+ *   items,
+ *   loading,
+ *   totalPages,
+ *   currentPage,
+ *   searchItems,
+ *   updateFilters,
+ *   clearFilters,
+ *   goToPage,
+ *   goToItemDetail
+ * } = useSearch()
+ * 
+ * // Aplicar filtros de búsqueda
+ * const handleSearch = async () => {
+ *   updateFilters({
+ *     query: 'bicicleta',
+ *     category: 'sports',
+ *     location: 'Madrid',
+ *     condition: 'good'
+ *   })
+ *   await searchItems()
+ * }
+ * 
+ * // Navegación entre páginas
+ * const handlePageChange = (page: number) => {
+ *   goToPage(page)
+ * }
+ * 
+ * // Limpiar todos los filtros
+ * const handleClearFilters = () => {
+ *   clearFilters()
+ * }
+ * 
+ * // Navegar a detalle de artículo
+ * const handleItemClick = (itemId: string) => {
+ *   goToItemDetail(itemId)
+ * }
+ * 
+ * // Verificar si hay filtros activos
+ * watchEffect(() => {
+ *   if (hasActiveFilters.value) {
+ *     // Mostrar indicador de filtros activos
+ *   }
+ * })
+ * ```
+ */
+
 import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useItemsStore } from '@/features/items'

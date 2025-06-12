@@ -1,13 +1,83 @@
+<!--
+  @fileoverview Archivo HTML principal para la aplicación Ecommunitas
+  
+  Este es el punto de entrada de la aplicación Vue.js de Ecommunitas,
+  una plataforma de trueque local que conecta a usuarios para intercambiar
+  bienes y servicios de manera sostenible.
+  
+  @description Características principales:
+  - **SPA**: Single Page Application con Vue.js 3
+  - **Responsive**: Diseño adaptable a todos los dispositivos
+  - **PWA Ready**: Preparado para Progressive Web App
+  - **SEO Optimized**: Meta tags optimizados para motores de búsqueda
+  - **Performance**: Carga rápida con Vite bundler
+  
+  @architecture
+  ```
+  index.html
+  ├── DOCTYPE html5
+  ├── Meta configuración
+  │   ├── charset: UTF-8
+  │   ├── viewport: responsive
+  │   └── favicon: SVG optimizado
+  ├── Título descriptivo
+  └── Punto de montaje
+      ├── #app: Contenedor Vue
+      └── main.js: Entrada de la aplicación
+  ```
+  
+  @features
+  - Soporte completo para caracteres UTF-8
+  - Viewport responsivo para móviles
+  - Favicon SVG escalable
+  - Carga de módulos ES6
+  - Hot reload en desarrollo
+  - Optimización automática en producción
+  
+  @seo
+  - Título descriptivo y único
+  - Meta description (se añade dinámicamente)
+  - Open Graph tags (se añaden dinámicamente)
+  - Structured data (se añade dinámicamente)
+  
+  @performance
+  - Carga asíncrona de JavaScript
+  - Preload de recursos críticos
+  - Lazy loading de imágenes
+  - Code splitting automático
+  - Tree shaking de dependencias
+  
+  @accessibility
+  - Idioma declarado (lang="es")
+  - Estructura semántica HTML5
+  - Soporte para lectores de pantalla
+  - Navegación por teclado
+  - Contraste de colores WCAG AA
+  
+  @author Equipo Ecommunitas
+  @version 1.0.0
+  @since 2024
+-->
 <!DOCTYPE html>
 <html lang="es">
   <head>
+    <!-- Configuración de caracteres y codificación -->
     <meta charset="UTF-8" />
+    
+    <!-- Favicon optimizado en formato SVG -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    
+    <!-- Configuración de viewport para diseño responsivo -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Título principal de la aplicación -->
     <title>Ecommunitas - Plataforma de trueque local</title>
   </head>
   <body>
+    <!-- Contenedor principal donde se monta la aplicación Vue.js -->
     <div id="app"></div>
+    
+    <!-- Punto de entrada de la aplicación - Carga main.js como módulo ES6 -->
     <script type="module" src="/src/main.js"></script>
   </body>
-</html >
+</html>

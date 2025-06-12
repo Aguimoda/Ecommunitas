@@ -319,11 +319,11 @@ class UserService {
    * return this.handleError(error, 'Error al obtener usuario')
    * ```
    */
-  private handleError(error: any, defaultMessage: string): { success: false; error: string; data: null } {
+  private handleError(error: unknown, defaultMessage: string): { success: false; error: string; data: null } {
     const processedError = processError(error)
     
     // Manejar errores de autenticación específicamente
-    if (error.response?.status === 401) {
+    if (error && typeof error === 'object' && 'response' in error && (error as any).response?.status === 401) {
       handleAuthError(error, true)
     }
     

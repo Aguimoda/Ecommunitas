@@ -88,7 +88,7 @@ export function throttle<T extends (...args: any[]) => any>(
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean
   
-  return function executedFunction(this: any, ...args: Parameters<T>) {
+  return function executedFunction(this: unknown, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args)
       inThrottle = true
@@ -179,11 +179,11 @@ export function safeJsonParse<T>(str: string, fallback: T): T {
 
 /**
  * Verifica si un valor está vacío (null, undefined, cadena vacía, array vacío, objeto vacío)
- * @param {any} value - Valor a verificar
+ * @param {unknown} value - Valor a verificar
  * @returns {boolean} True si el valor está vacío
  * @description Útil para validaciones y verificaciones de datos
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim().length === 0
   if (Array.isArray(value)) return value.length === 0

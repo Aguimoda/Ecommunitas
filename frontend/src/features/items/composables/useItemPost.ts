@@ -130,7 +130,6 @@ export function useItemPost(): UseItemPostReturn {
     }
     
     images.value = files
-    console.log('Imágenes cargadas:', files.length)
   }
 
   /**
@@ -150,7 +149,6 @@ export function useItemPost(): UseItemPostReturn {
     longitude.value = locationData.longitude
     locationError.value = ''
     // Ubicación seleccionada exitosamente (sin notificación)
-    console.log('Ubicación seleccionada:', locationData)
   }
 
   /**
@@ -164,7 +162,6 @@ export function useItemPost(): UseItemPostReturn {
     latitude.value = null
     longitude.value = null
     locationError.value = ''
-    console.log('Ubicación limpiada')
   }
 
   /**
@@ -312,8 +309,6 @@ export function useItemPost(): UseItemPostReturn {
    */
   const handleSubmit = async (): Promise<void> => {
     try {
-      console.log('Iniciando envío del formulario...')
-      
       // Validar autenticación
       if (!checkAuthentication()) {
         return
@@ -327,12 +322,8 @@ export function useItemPost(): UseItemPostReturn {
       // Crear FormData
       const formData = createFormData()
       
-      console.log('Datos del formulario preparados, enviando al store...')
-      
       // Crear el artículo usando el store
-      const response = await itemsStore.createItem(formData)
-      
-      console.log('Artículo publicado exitosamente:', response)
+      await itemsStore.createItem(formData)
       // Artículo publicado exitosamente (sin notificación)
       
       // Resetear formulario y navegar

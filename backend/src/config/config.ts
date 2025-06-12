@@ -1,10 +1,30 @@
+/**
+ * @file config.ts
+ * @description Configuración central de la aplicación y variables de entorno
+ * @module Config/AppConfig
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona:
+ * - Validación de variables de entorno requeridas
+ * - Configuración tipada de la aplicación
+ * - Configuraciones específicas por entorno (desarrollo, producción, test)
+ * - Configuraciones de servidor, base de datos, JWT, email, Cloudinary
+ * - Configuraciones de CORS, rate limiting, logging
+ * - Configuraciones de archivos y uploads
+ */
+
 import dotenv from 'dotenv';
 import { EnvironmentConfig } from '../../types/index';
 
-// Load environment variables
+// Cargar variables de entorno
 dotenv.config();
 
-// Validate required environment variables
+/**
+ * Variables de entorno requeridas para el funcionamiento de la aplicación
+ * @constant {string[]} requiredEnvVars
+ */
 const requiredEnvVars = [
   'NODE_ENV',
   'PORT',
@@ -13,6 +33,7 @@ const requiredEnvVars = [
   'FRONTEND_URL'
 ];
 
+// Validar variables de entorno requeridas
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
@@ -20,7 +41,21 @@ if (missingEnvVars.length > 0) {
   process.exit(1);
 }
 
-// Environment configuration
+/**
+ * Configuración principal de variables de entorno
+ * 
+ * @constant {EnvironmentConfig} config
+ * @description
+ * Objeto que contiene todas las variables de entorno tipadas y validadas:
+ * - NODE_ENV: Entorno de ejecución (development, production, test)
+ * - PORT: Puerto del servidor
+ * - DATABASE_URI: URI de conexión a MongoDB
+ * - JWT_SECRET: Clave secreta para tokens JWT
+ * - JWT_EXPIRE: Tiempo de expiración de tokens
+ * - Configuraciones de email (SMTP)
+ * - Configuraciones de Cloudinary
+ * - URL del frontend para CORS
+ */
 export const config: EnvironmentConfig = {
   NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development',
   PORT: parseInt(process.env.PORT || '5000', 10),
@@ -40,9 +75,26 @@ export const config: EnvironmentConfig = {
   FRONTEND_URL: process.env.FRONTEND_URL!
 };
 
-// Application settings
+/**
+ * Configuración detallada de la aplicación
+ * 
+ * @constant {object} appConfig
+ * @description
+ * Objeto que contiene todas las configuraciones específicas de la aplicación:
+ * - server: Configuraciones del servidor (CORS, Helmet, host, puerto)
+ * - database: Configuraciones de MongoDB (opciones de conexión, pooling)
+ * - jwt: Configuraciones de autenticación JWT
+ * - email: Configuraciones de servicio de email
+ * - upload: Configuraciones de subida de archivos
+ * - rateLimit: Configuraciones de limitación de requests
+ * - logging: Configuraciones de logs
+ * - security: Configuraciones de seguridad
+ */
 export const appConfig = {
-  // Server settings
+  /**
+   * Configuraciones del servidor Express
+   * @property {object} server
+   */
   server: {
     port: config.PORT,
     host: process.env.HOST || '0.0.0.0',

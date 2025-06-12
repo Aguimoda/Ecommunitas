@@ -1,3 +1,67 @@
+<!--
+/**
+ * @file NotFoundView.vue
+ * @description Vista de error 404 para páginas no encontradas en Ecommunitas
+ * 
+ * Este componente renderiza una página de error 404 elegante y funcional
+ * cuando los usuarios intentan acceder a rutas que no existen en la aplicación.
+ * Proporciona opciones de navegación para ayudar a los usuarios a regresar
+ * a contenido válido.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🚫 Página de error 404 elegante
+ * - 🏠 Botón para volver al inicio
+ * - ⬅️ Botón para volver atrás
+ * - 🎨 Diseño centrado y responsive
+ * - 🌙 Soporte para modo oscuro
+ * - 📱 Optimizado para móviles
+ * - ♿ Accesible y semántico
+ * 
+ * FUNCIONALIDADES:
+ * - Navegación inteligente hacia atrás
+ * - Redirección al inicio como fallback
+ * - Detección del historial del navegador
+ * - Mensajes informativos claros
+ * - Botones de acción prominentes
+ * - Transiciones suaves
+ * 
+ * NAVEGACIÓN:
+ * - Botón "Volver al inicio": Redirige a la página principal
+ * - Botón "Volver atrás": Usa historial del navegador o va al inicio
+ * - Lógica inteligente para manejar casos sin historial
+ * - Integración completa con Vue Router
+ * 
+ * DISEÑO:
+ * - Layout centrado verticalmente
+ * - Número 404 prominente
+ * - Título y descripción informativos
+ * - Botones de acción claros
+ * - Espaciado consistente
+ * - Colores temáticos
+ * 
+ * ESTADOS MANEJADOS:
+ * - Historial de navegación disponible
+ * - Sin historial previo (fallback a inicio)
+ * - Modo claro y oscuro
+ * - Diferentes tamaños de pantalla
+ * 
+ * INTEGRACIÓN:
+ * - Vue Router para navegación
+ * - Tailwind CSS para estilos
+ * - Composables de Vue 3
+ * - Sistema de rutas de la aplicación
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - Vue Router 4
+ * - Tailwind CSS
+ * - Responsive Design
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
     <div class="max-w-md w-full space-y-8 text-center">

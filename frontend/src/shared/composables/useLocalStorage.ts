@@ -1,7 +1,93 @@
 /**
- * Shared Local Storage Composable
- * Provides reactive local storage functionality with type safety
- * Automatically syncs with localStorage and handles serialization
+ * @file useLocalStorage.ts
+ * @description Composable para manejo reactivo de localStorage en Ecommunitas
+ * 
+ * Este composable proporciona una interfaz reactiva y type-safe para trabajar
+ * con localStorage en Vue 3. Incluye sincronización automática entre pestañas,
+ * serialización personalizable, manejo de errores robusto y funcionalidades
+ * especializadas para preferencias de usuario y persistencia de formularios.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🔄 Reactividad automática con localStorage
+ * - 🛡️ Type safety completo con TypeScript
+ * - 🔄 Sincronización entre pestañas en tiempo real
+ * - 📦 Serialización/deserialización personalizable
+ * - ⚠️ Manejo robusto de errores con notificaciones
+ * - 🎯 Funciones especializadas para casos de uso comunes
+ * - 💾 Persistencia automática de cambios
+ * - 🧹 Limpieza automática de memoria
+ * 
+ * FUNCIONALIDADES:
+ * - Lectura/escritura reactiva de localStorage
+ * - Valores por defecto configurables
+ * - Serialización JSON personalizable
+ * - Sincronización automática entre pestañas
+ * - Manejo de preferencias de usuario
+ * - Persistencia de formularios
+ * - Historial de búsquedas
+ * - Elementos recientes visitados
+ * 
+ * CASOS DE USO:
+ * - Preferencias de tema y idioma
+ * - Configuración de notificaciones
+ * - Historial de búsquedas del usuario
+ * - Elementos recientemente visitados
+ * - Persistencia de formularios largos
+ * - Configuraciones de interfaz
+ * - Estado de sesión del usuario
+ * - Cache de datos temporales
+ * 
+ * CONFIGURACIÓN:
+ * - serializer: Funciones personalizadas de serialización
+ * - syncAcrossTabs: Sincronización entre pestañas (default: true)
+ * - showNotifications: Mostrar notificaciones de error (default: false)
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Web Storage API (localStorage)
+ * - Storage Events para sincronización
+ * - Sistema de notificaciones integrado
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico
+ * const [count, setCount, removeCount] = useLocalStorage('counter', 0)
+ * 
+ * // Con opciones personalizadas
+ * const [user, setUser] = useLocalStorage('user', null, {
+ *   syncAcrossTabs: true,
+ *   showNotifications: true,
+ *   serializer: {
+ *     read: JSON.parse,
+ *     write: JSON.stringify
+ *   }
+ * })
+ * 
+ * // Preferencias de usuario
+ * const {
+ *   theme,
+ *   setTheme,
+ *   language,
+ *   setLanguage,
+ *   addToSearchHistory
+ * } = useUserPreferences()
+ * 
+ * // Persistencia de formularios
+ * const {
+ *   formData,
+ *   updateField,
+ *   resetForm
+ * } = useFormPersistence('contact-form', {
+ *   name: '',
+ *   email: '',
+ *   message: ''
+ * })
+ * ```
  */
 
 import { ref, watch, Ref } from 'vue'

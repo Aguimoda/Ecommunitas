@@ -210,7 +210,6 @@ export function useMessageDetail(): UseMessageDetailReturn {
     if (otherUser.value && otherUser.value?._id) {
       try {
         await messageService.markConversationAsRead(otherUser.value._id)
-        console.log('Conversación marcada como leída en el backend')
         
         // Emitir evento para actualizar UI en otros componentes
         window.dispatchEvent(new CustomEvent('conversationRead', { 
@@ -240,7 +239,6 @@ export function useMessageDetail(): UseMessageDetailReturn {
       // Cargando conversación... (sin notificación)
       
       const response = await messageService.getConversation(route.params.id as string)
-      console.log('API Response from getConversation:', response)
 
       // Validar datos de la respuesta
       if (!validateConversationData(response)) {

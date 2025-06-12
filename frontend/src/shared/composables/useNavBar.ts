@@ -3,6 +3,112 @@ import { useRouter } from 'vue-router'
 import { useAuth, useAuthStore } from '@/features/auth'
 import { getUserInitials, getUserAvatarUrl } from '@/features/users'
 import { messageService } from '@/features/messages'
+import { displayError } from '@/shared/utils/errorHandler'
+
+/**
+ * @file useNavBar.ts
+ * @description Composable para manejo de la barra de navegación en Ecommunitas
+ * 
+ * Este composable centraliza toda la lógica de la barra de navegación principal,
+ * incluyendo autenticación de usuarios, gestión de mensajes no leídos, menús
+ * móviles responsivos, modo oscuro y navegación entre páginas. Proporciona
+ * una interfaz reactiva y consistente para todos los componentes de navegación.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🔐 Gestión completa de estado de autenticación
+ * - 📱 Menús responsivos para dispositivos móviles
+ * - 💬 Polling automático de mensajes no leídos
+ * - 🌙 Modo oscuro con persistencia en localStorage
+ * - 🧭 Navegación programática entre rutas
+ * - 👤 Información de usuario con avatar e iniciales
+ * - 🔄 Sincronización automática de estado
+ * - 📊 Contadores en tiempo real
+ * 
+ * FUNCIONALIDADES:
+ * - Control de visibilidad de menús móviles
+ * - Gestión de menú desplegable de usuario
+ * - Alternancia de modo oscuro con persistencia
+ * - Polling automático de mensajes cada 30 segundos
+ * - Navegación a perfil, mensajes, configuración y admin
+ * - Cierre de sesión con limpieza de estado
+ * - Inicialización automática de preferencias
+ * - Manejo de errores con notificaciones
+ * 
+ * ESTADOS REACTIVOS:
+ * - showMobileMenu: Visibilidad del menú móvil
+ * - showUserMenu: Visibilidad del menú de usuario
+ * - isDarkMode: Estado del modo oscuro
+ * - unreadMessages: Contador de mensajes no leídos
+ * - messageInterval: Control del polling automático
+ * 
+ * PROPIEDADES COMPUTADAS:
+ * - isAuthenticated: Estado de autenticación
+ * - userName: Nombre del usuario actual
+ * - userInitials: Iniciales del nombre
+ * - userAvatarUrl: URL del avatar del usuario
+ * 
+ * CASOS DE USO:
+ * - Barra de navegación principal de la aplicación
+ * - Menús de navegación móvil
+ * - Indicadores de mensajes no leídos
+ * - Controles de tema y modo oscuro
+ * - Menús desplegables de usuario
+ * - Navegación entre secciones de la app
+ * - Gestión de sesión de usuario
+ * 
+ * INTEGRACIÓN:
+ * - Vue Router para navegación
+ * - Pinia stores para estado global
+ * - Sistema de autenticación
+ * - Servicio de mensajes
+ * - Utilidades de manejo de errores
+ * - localStorage para persistencia
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Vue Router para navegación
+ * - Pinia para gestión de estado
+ * - Web Storage API para persistencia
+ * - Polling automático con setInterval
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ * 
+ * @example
+ * ```typescript
+ * // Uso básico en componente NavBar
+ * const {
+ *   showMobileMenu,
+ *   showUserMenu,
+ *   isAuthenticated,
+ *   userName,
+ *   unreadMessages,
+ *   toggleMobileMenu,
+ *   toggleUserMenu,
+ *   handleLogout,
+ *   navigateToProfile
+ * } = useNavBar()
+ * 
+ * // Control de menú móvil
+ * const handleMobileMenuClick = () => {
+ *   toggleMobileMenu()
+ * }
+ * 
+ * // Navegación con cierre automático de menús
+ * const goToProfile = () => {
+ *   navigateToProfile() // Navega y cierra menús automáticamente
+ * }
+ * 
+ * // Verificar mensajes no leídos
+ * watchEffect(() => {
+ *   if (unreadMessages.value > 0) {
+ *     // Mostrar badge de notificación
+ *   }
+ * })
+ * ```
+ */
 
 /**
  * Valor de retorno del composable useNavBar
@@ -83,7 +189,7 @@ interface UseNavBarReturn {
  * 
  * // Verificar autenticación
  * if (isAuthenticated.value) {
- *   console.log('Mensajes no leídos:', unreadMessages.value)
+ *   // Mensajes no leídos disponibles en unreadMessages.value
  * }
  * 
  * // Cerrar sesión
@@ -127,7 +233,7 @@ export function useNavBar(): UseNavBarReturn {
         unreadMessages.value = response.data.length
       }
     } catch (err) {
-      console.error('Error al obtener mensajes no leídos:', err)
+      displayError(err, { customMessage: 'Error al obtener mensajes no leídos' })
     }
   }
   
@@ -160,7 +266,7 @@ export function useNavBar(): UseNavBarReturn {
       showMobileMenu.value = false
       router.push('/')
     } catch (err) {
-      console.error('Error al cerrar sesión:', err)
+      displayError(err, { customMessage: 'Error al cerrar sesión' })
     }
   }
   

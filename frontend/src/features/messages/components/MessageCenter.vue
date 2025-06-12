@@ -1,4 +1,54 @@
+<!--
+/**
+ * @file MessageCenter.vue
+ * @description Centro de mensajería para comunicación entre usuarios en Ecommunitas
+ * 
+ * Este componente implementa un sistema completo de mensajería que permite a los usuarios
+ * comunicarse entre sí de manera privada. Incluye lista de conversaciones, chat en tiempo real,
+ * notificaciones de mensajes no leídos y una interfaz intuitiva tipo WhatsApp/Telegram.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 💬 Chat en tiempo real entre usuarios
+ * - 📋 Lista de conversaciones con vista previa
+ * - 🔔 Notificaciones de mensajes no leídos
+ * - 👤 Avatares y información de usuarios
+ * - 📱 Interfaz responsive tipo messenger
+ * - ⚡ Actualizaciones en tiempo real
+ * - 🕒 Marcas de tiempo de mensajes
+ * - ✅ Estados de entrega y lectura
+ * 
+ * FUNCIONALIDADES:
+ * - Envío y recepción de mensajes instantáneos
+ * - Gestión de conversaciones múltiples
+ * - Búsqueda en conversaciones
+ * - Eliminación de mensajes
+ * - Marcado de mensajes como leídos
+ * - Notificaciones push (cuando esté disponible)
+ * - Historial completo de conversaciones
+ * - Indicadores de usuario en línea
+ * 
+ * COMPONENTES INTEGRADOS:
+ * - Lista de conversaciones con metadatos
+ * - Área de chat con mensajes
+ * - Formulario de envío de mensajes
+ * - Indicadores de estado
+ * - Avatares de usuario
+ * - Contadores de mensajes no leídos
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - WebSocket para tiempo real (futuro)
+ * - Tailwind CSS para estilos
+ * - API REST para persistencia
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
+  <!-- Contenedor principal del centro de mensajes -->
   <div class="message-center">
     <div class="message-sidebar">
       <h2 class="text-xl font-bold mb-4">Mensajes</h2>

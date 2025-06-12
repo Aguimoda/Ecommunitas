@@ -1,3 +1,58 @@
+/**
+ * @fileoverview Definiciones de tipos TypeScript para la aplicación Ecommunitas
+ * 
+ * Este archivo centraliza todas las interfaces y tipos TypeScript utilizados
+ * en el backend de Ecommunitas. Proporciona type safety y documentación
+ * para todas las estructuras de datos principales.
+ * 
+ * @description Tipos incluidos:
+ * - **EnvironmentConfig**: Configuración de variables de entorno
+ * - **AuthenticatedRequest**: Request de Express con usuario autenticado
+ * - **IUser**: Interfaz para usuarios del sistema
+ * - **IItem**: Interfaz para items/artículos
+ * - **IMessage**: Interfaz para mensajes
+ * - **Utility Types**: Tipos auxiliares para validaciones y respuestas
+ * 
+ * @architecture
+ * ```
+ * types/index.ts
+ * ├── Configuración
+ * │   └── EnvironmentConfig
+ * ├── Autenticación
+ * │   └── AuthenticatedRequest
+ * ├── Modelos de Datos
+ * │   ├── IUser
+ * │   ├── IItem
+ * │   └── IMessage
+ * └── Tipos Auxiliares
+ *     ├── Validaciones
+ *     ├── Respuestas API
+ *     └── Geolocalización
+ * ```
+ * 
+ * @benefits
+ * - **Type Safety**: Prevención de errores en tiempo de compilación
+ * - **IntelliSense**: Autocompletado mejorado en IDEs
+ * - **Documentación**: Tipos autodocumentados
+ * - **Refactoring**: Cambios seguros en toda la aplicación
+ * - **Consistencia**: Estructuras de datos uniformes
+ * 
+ * @example
+ * ```typescript
+ * import { IUser, AuthenticatedRequest } from '../types';
+ * 
+ * // Uso en controladores
+ * const createUser = (req: AuthenticatedRequest, res: Response) => {
+ *   const user: IUser = req.user;
+ *   // TypeScript valida automáticamente las propiedades
+ * };
+ * ```
+ * 
+ * @author Equipo Ecommunitas
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import { Request } from 'express';
 import { Document } from 'mongoose';
 import { UploadedFile } from 'express-fileupload';

@@ -1,6 +1,17 @@
 /**
  * @file validators.ts
- * @description Validadores de formularios usando Zod
+ * @description Validadores de formularios y esquemas de datos usando Zod para Ecommunitas
+ * @module Utils/Validators
+ * @version 1.0.0
+ * @author Ecommunitas Team
+ * @created 2024
+ * 
+ * Este módulo proporciona:
+ * - Esquemas de validación con Zod para formularios
+ * - Validadores específicos para items/artículos
+ * - Funciones de validación con manejo de errores
+ * - Expresiones regulares para formatos específicos
+ * - Integración con sistema de notificaciones de errores
  */
 
 import { z } from 'zod'
@@ -8,9 +19,33 @@ import { displayError } from '@/shared/utils/errorHandler'
 
 // const toast = useToast()
 
-// Expresión regular para validar ubicaciones (ciudad, país)
+/**
+ * Expresión regular para validar formato de ubicaciones
+ * @constant {RegExp} LOCATION_REGEX
+ * @description
+ * Valida que la ubicación tenga el formato "Ciudad, País"
+ * Acepta caracteres alfanuméricos, espacios, acentos y guiones
+ * 
+ * @example
+ * ```typescript
+ * LOCATION_REGEX.test("Madrid, España") // true
+ * LOCATION_REGEX.test("New York, USA") // true
+ * LOCATION_REGEX.test("Ciudad inválida") // false
+ * ```
+ */
 const LOCATION_REGEX = /^[\w\sáéíóúÁÉÍÓÚñÑ-]+,\s*[\w\sáéíóúÁÉÍÓÚñÑ-]+$/
 
+/**
+ * Esquema de validación para formularios de items/artículos
+ * @constant {z.ZodObject} itemSchema
+ * @description
+ * Define las reglas de validación para:
+ * - title: Título del artículo (3-100 caracteres)
+ * - description: Descripción del artículo (10-500 caracteres)
+ * - category: Categoría seleccionada (requerida)
+ * - condition: Condición del artículo (requerida)
+ * - location: Ubicación en formato "Ciudad, País"
+ */
 export const itemSchema = z.object({
   title: z.string()
     .min(3, 'El título debe tener al menos 3 caracteres')

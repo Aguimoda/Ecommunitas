@@ -1,30 +1,80 @@
+<!--
+/**
+ * @file SearchFilters.vue
+ * @description Componente de filtros avanzados para búsqueda de artículos en Ecommunitas
+ * 
+ * Este componente proporciona una interfaz completa de filtros para refinar
+ * las búsquedas de artículos. Incluye filtros por texto, categoría, ubicación,
+ * rango de precios, estado del artículo y ordenamiento, permitiendo a los
+ * usuarios encontrar exactamente lo que buscan.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🔍 Búsqueda por texto con autocompletado
+ * - 🏷️ Filtro por categorías predefinidas
+ * - 📍 Filtro por ubicación geográfica
+ * - 💰 Rango de precios personalizable
+ * - 📊 Estado del artículo (nuevo, usado, etc.)
+ * - 🔄 Opciones de ordenamiento múltiples
+ * - 🎨 Interfaz responsive y accesible
+ * - ⚡ Aplicación de filtros en tiempo real
+ * 
+ * FILTROS DISPONIBLES:
+ * - Búsqueda textual: Busca en título y descripción
+ * - Categoría: Libros, Electrónica, Ropa, Muebles, Otros
+ * - Ubicación: Integración con LocationPicker
+ * - Precio: Rango mínimo y máximo
+ * - Estado: Nuevo, Como nuevo, Usado, Para reparar
+ * - Ordenamiento: Relevancia, Precio, Fecha, Distancia
+ * 
+ * FUNCIONALIDADES:
+ * - Validación de rangos de precio
+ * - Limpieza de filtros individual y global
+ * - Persistencia de filtros durante la sesión
+ * - Emisión de eventos para sincronización
+ * - Aplicación automática o manual de filtros
+ * - Indicadores visuales de filtros activos
+ * 
+ * PROPS:
+ * @prop {Object} filters - Objeto con los filtros actuales
+ * @prop {Array} categories - Lista de categorías disponibles
+ * @prop {Boolean} loading - Estado de carga de la búsqueda
+ * @prop {Boolean} autoApply - Aplicar filtros automáticamente
+ * 
+ * EVENTOS EMITIDOS:
+ * @event update:filters - Cuando se actualizan los filtros
+ * @event apply-filters - Cuando se aplican los filtros manualmente
+ * @event clear-filters - Cuando se limpian todos los filtros
+ * @event clear-filter - Cuando se limpia un filtro específico
+ * 
+ * VALIDACIONES:
+ * - Precio mínimo no puede ser mayor que el máximo
+ * - Valores numéricos válidos para precios
+ * - Categorías válidas según lista predefinida
+ * - Ubicación válida según LocationPicker
+ * 
+ * INTEGRACIÓN:
+ * - LocationPicker para selección de ubicación
+ * - Sistema de categorías de la aplicación
+ * - Store de búsqueda para persistencia
+ * - Componentes de búsqueda principales
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - Tailwind CSS para estilos
+ * - Componente LocationPicker
+ * - Validación de formularios
+ * - Eventos reactivos
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="bg-white p-6 rounded-lg shadow-md mb-8">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Filtros de búsqueda</h2>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      <!-- Búsqueda por texto -->
-      <div>
-        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Buscar:</label>
-        <div class="relative">
-          <input 
-            type="text" 
-            id="search" 
-            v-model="internalFilters.query" 
-            placeholder="Buscar artículos..."
-            @keyup.enter="applyFiltersHandler"
-            aria-label="Buscar artículos"
-            autocomplete="off"
-            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <!-- Filtro por categoría -->
       <div>
         <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría:</label>
@@ -43,21 +93,9 @@
           <option value="other">Otros</option>
         </select>
       </div>
-      
-      <!-- Filtro por ubicación -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Ubicación:</label>
-        <LocationPicker
-          :initial-address="internalFilters.location"
-          :initial-location="internalFilters.coordinates ? { lat: internalFilters.coordinates[1], lng: internalFilters.coordinates[0] } : null"
-          @location-selected="onLocationSelected"
-          @location-cleared="onLocationCleared"
-          :compact="true"
-        />
-      </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       <!-- Filtro por condición -->
       <div>
         <label for="condition" class="block text-sm font-medium text-gray-700 mb-1">Condición:</label>
@@ -77,29 +115,8 @@
         </select>
       </div>
       
-      <!-- Filtro por radio de distancia -->
-      <div>
-        <label for="distance" class="block text-sm font-medium text-gray-700 mb-1">Radio de búsqueda:</label>
-        <div class="flex items-center">
-          <input 
-            type="range" 
-            id="distance" 
-            v-model.number="internalFilters.distance" 
-            @input="emitUpdateFilters" 
-            min="1" 
-            max="50" 
-            step="1"
-            :disabled="!hasLocationCoordinates"
-            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-          <span class="ml-2 text-sm text-gray-600 w-16">{{ internalFilters.distance }} km</span>
-        </div>
-        <p v-if="!hasLocationCoordinates" class="text-xs text-gray-500 mt-1">
-          Selecciona una ubicación para habilitar el filtro de distancia
-        </p>
-      </div>
-      
-      <!-- Ordenar por -->
+      <!-- Ordenar por - OCULTO TEMPORALMENTE -->
+      <!-- 
       <div>
         <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Ordenar por:</label>
         <select 
@@ -116,7 +133,13 @@
           <option value="nearest">Más cercanos</option>
         </select>
       </div>
+      -->
+      
+      <!-- Div vacío para mantener el grid -->
+      <div></div>
     </div>
+    
+
     
     <!-- Botones de acción -->
     <div class="flex flex-col sm:flex-row justify-between items-center gap-2 mt-4">
@@ -167,12 +190,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { LocationPicker } from '@/shared/components';
-import { componentDefaultFilters } from './searchFiltersConstants';
+import { DEFAULT_SEARCH_FILTERS } from './searchFiltersConstants';
 // import { useToast } from 'vue-toastification';
 import { translateCategory, translateCondition } from '@/utils/translations';
 
-// componentDefaultFilters is imported from './searchFiltersConstants'
+// DEFAULT_SEARCH_FILTERS is imported from './searchFiltersConstants'
 
 const props = defineProps({
   filters: {
@@ -185,37 +207,19 @@ const emit = defineEmits(['update:filters', 'apply', 'reset']);
 
 // Internal state for filters, initialized with component defaults and then overridden by props
 const internalFilters = ref({
-  ...componentDefaultFilters,
+  ...DEFAULT_SEARCH_FILTERS,
   ...(props.filters ? props.filters : {})
 });
 
 // Toast notifications
 // const toast = useToast();
 
-// Computed property to check if location coordinates are available
-const hasLocationCoordinates = computed(() => {
-  return internalFilters.value.coordinates && 
-         Array.isArray(internalFilters.value.coordinates) && 
-         internalFilters.value.coordinates.length === 2;
-});
-
-// Location picker handlers
-const onLocationSelected = (locationData) => {
-  internalFilters.value.location = locationData.address;
-  internalFilters.value.coordinates = [locationData.longitude, locationData.latitude];
-  // toast.success('Ubicación seleccionada para filtros');
-};
-
-const onLocationCleared = () => {
-  internalFilters.value.location = '';
-  internalFilters.value.coordinates = null;
-  // toast.info('Ubicación eliminada de los filtros');
-};
+// Funciones de geolocalización eliminadas
 
 // Watch for external changes to props.filters and update internal state
 // This ensures two-way binding with v-model:filters works correctly
 watch(() => props.filters, (newPropFilters) => {
-  internalFilters.value = { ...componentDefaultFilters, ...(newPropFilters || {}) };
+  internalFilters.value = { ...DEFAULT_SEARCH_FILTERS, ...(newPropFilters || {}) };
 }, { deep: true });
 
 // Observar cambios en las coordenadas geográficas y actualizar el estado interno (Desactivado temporalmente)
@@ -232,13 +236,13 @@ watch(coordinates, (newCoords) => {
 const activeFilters = computed(() => {
   const result = {};
   Object.entries(internalFilters.value).forEach(([key, value]) => {
-    // Excluir coordenadas, page, y limit de los chips de filtros activos
-    if (key === 'coordinates' || key === 'page' || key === 'limit') {
+    // Excluir page y limit de los chips de filtros activos
+    if (key === 'page' || key === 'limit') {
       return;
     }
 
     // Un filtro se considera activo si su valor no es una cadena vacía y es diferente de su valor por defecto
-    if (value !== '' && value !== componentDefaultFilters[key]) {
+    if (value !== '' && value !== DEFAULT_SEARCH_FILTERS[key]) {
       result[key] = value;
     }
   });
@@ -255,11 +259,8 @@ const getFilterLabel = (key, value) => {
   const labels = {
     query: `Búsqueda: ${value}`,
     category: `Categoría: ${translateCategory(value)}`,
-    location: `Ubicación: ${value}`,
     condition: `Condición: ${translateCondition(value)}`,
-    distance: `Radio: ${value} km`,
-    sort: `Orden: ${getSortLabel(value)}`,
-    coordinates: 'Ubicación seleccionada'
+    sort: `Orden: ${getSortLabel(value)}`
   };
   
   return labels[key] || `${key}: ${value}`;
@@ -305,22 +306,20 @@ const applyFiltersHandler = () => {
   // Resetear página a 1 cuando se aplican nuevos filtros (el padre se encargará de esto)
   // internalFilters.value.page = 1; // El padre debe manejar la paginación
   
-  console.log('SearchFilters - Solicitando aplicar filtros con:', JSON.stringify(internalFilters.value));
   emit('apply'); // Solo notifica al padre que aplique los filtros que ya tiene (vía v-model)
 };
 
 // Resetear filtros (ahora solo emite 'reset')
 const resetFiltersHandler = () => {
-  internalFilters.value = { ...componentDefaultFilters }; // Esto disparará el watch y emitirá update:filters
+  internalFilters.value = { ...DEFAULT_SEARCH_FILTERS }; // Esto disparará el watch y emitirá update:filters
   // internalFilters.value.page = 1; // El padre debe manejar la paginación
-  console.log('SearchFilters - Solicitando resetear filtros.');
   emit('reset'); // Notifica al padre que resetee y aplique (el padre ya tiene los filtros reseteados vía v-model)
 };
 
 // Eliminar un filtro específico, restaurándolo a su valor por defecto
 const removeFilter = (key) => {
-  if (internalFilters.value.hasOwnProperty(key) && componentDefaultFilters.hasOwnProperty(key)) {
-    internalFilters.value[key] = componentDefaultFilters[key];
+  if (internalFilters.value.hasOwnProperty(key) && DEFAULT_SEARCH_FILTERS.hasOwnProperty(key)) {
+    internalFilters.value[key] = DEFAULT_SEARCH_FILTERS[key];
   } else {
     // Fallback por si la clave no está en defaults (aunque debería estarlo)
     internalFilters.value[key] = ''; 

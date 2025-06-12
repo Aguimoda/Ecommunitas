@@ -136,8 +136,9 @@ export function useItemDetail(itemId: string): UseItemDetailReturn {
   const getItemImages = (itemData: Item | null): string[] => {
     if (!itemData) return []
     
-    // Retornar el array de imágenes del item
-    return itemData.images || []
+    // Verificar si el item tiene imageUrls (del backend) o images (interfaz frontend)
+    const itemAsAny = itemData as any
+    return itemAsAny.imageUrls || itemData.images || []
   }
 
   /**

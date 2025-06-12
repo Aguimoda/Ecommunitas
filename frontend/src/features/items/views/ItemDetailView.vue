@@ -1,3 +1,57 @@
+<!--
+/**
+ * @file ItemDetailView.vue
+ * @description Vista detallada de un artículo individual en Ecommunitas
+ * 
+ * Este componente muestra toda la información detallada de un artículo específico,
+ * incluyendo imágenes, descripción, ubicación, información del propietario y
+ * opciones de contacto. Proporciona una experiencia completa para visualizar
+ * y gestionar artículos individuales.
+ * 
+ * CARACTERÍSTICAS PRINCIPALES:
+ * - 🖼️ Galería de imágenes con navegación
+ * - 📍 Información de ubicación con mapa
+ * - 👤 Perfil del propietario del artículo
+ * - 💬 Sistema de mensajería integrado
+ * - ⚡ Carga optimizada de contenido
+ * - 📱 Diseño responsive y accesible
+ * - 🔄 Estados de carga y error
+ * 
+ * FUNCIONALIDADES:
+ * - Visualización completa de detalles del artículo
+ * - Navegación entre múltiples imágenes
+ * - Contacto directo con el propietario
+ * - Compartir artículo en redes sociales
+ * - Reportar contenido inapropiado
+ * - Gestión de favoritos (si está autenticado)
+ * - Edición del artículo (si es el propietario)
+ * 
+ * ESTADOS MANEJADOS:
+ * - Carga inicial de datos
+ * - Error en la obtención del artículo
+ * - Artículo no encontrado
+ * - Estados de autenticación del usuario
+ * - Permisos de edición
+ * 
+ * INTEGRACIÓN:
+ * - Store de items para gestión de datos
+ * - Store de autenticación para permisos
+ * - Sistema de mensajería para contacto
+ * - Servicio de geolocalización para mapas
+ * - APIs de redes sociales para compartir
+ * 
+ * TECNOLOGÍAS:
+ * - Vue 3 Composition API
+ * - TypeScript para tipado estático
+ * - Tailwind CSS para estilos
+ * - Vue Router para navegación
+ * - Pinia para gestión de estado
+ * 
+ * @author Equipo de Desarrollo Ecommunitas
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+-->
 <template>
   <div class="min-h-screen bg-gray-50 p-6">
     <div class="max-w-4xl mx-auto">
@@ -217,7 +271,6 @@
             </button>
           </div>
           <div class="p-4">
-            {{console.log(item)}}
             <MessageForm 
               :recipientId="item.user._id" 
               :recipientName="item.user.name" 
