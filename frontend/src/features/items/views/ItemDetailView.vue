@@ -91,8 +91,9 @@
           <!-- Imagen principal -->
           <img 
             v-if="itemImages.length > 0" 
+            :key="`image-${currentImageIndex}-${itemImages[currentImageIndex]}`"
             :src="itemImages[currentImageIndex]" 
-            :alt="item.title" 
+            :alt="`${item.title} - Imagen ${currentImageIndex + 1}`" 
             class="w-full h-full object-contain"
             @error="handleImageError"
           >
@@ -150,12 +151,13 @@
           <div class="flex space-x-2 overflow-x-auto">
             <button 
               v-for="(image, index) in itemImages" 
-              :key="index"
+              :key="`thumbnail-${index}-${image}`"
               @click="currentImageIndex = index"
               class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all thumbnail"
               :class="currentImageIndex === index ? 'border-indigo-500' : 'border-gray-300 hover:border-gray-400'"
             >
               <img 
+                :key="`thumb-img-${index}-${image}`"
                 :src="image" 
                 :alt="`${item.title} - Imagen ${index + 1}`" 
                 class="w-full h-full object-cover"
@@ -299,6 +301,7 @@
 </template>
 
 <script setup>
+import { watch } from 'vue'
 import { MessageForm } from '@/features/messages/components'
 import { EditItemModal } from '@/features/items/components'
 import { useItemDetail } from '../composables/useItemDetail'
@@ -348,7 +351,10 @@ const {
 // Métodos adicionales que no están en el composable
 const handleImageError = (event) => {
   console.error('Error loading image:', event)
-  // Aquí podrías mostrar una imagen por defecto
+  // Mostrar imagen por defecto cuando falla la carga
+  const target = event.target as HTMLImageElement
+  target.src = '/default-item.png'
+  target.alt = 'Imagen no disponible'
 }
 
 const handleMainAction = () => {
@@ -377,6 +383,23 @@ const handleMessageSent = () => {
   closeContactForm()
   // Aquí podrías mostrar una notificación de éxito
 }
+
+// Precargar imágenes para mejorar la experiencia del carrusel
+const preloadImages = () => {
+  if (itemImages.value && itemImages.value.length > 1) {
+    itemImages.value.forEach((imageUrl, index) => {
+      if (index !== currentImageIndex.value) {
+        const img = new Image()
+        img.src = imageUrl
+      }
+    })
+  }
+}
+
+// Precargar imágenes cuando cambie el artículo
+watch(itemImages, () => {
+  preloadImages()
+}, { immediate: true })
 </script>
 
 <style scoped>
