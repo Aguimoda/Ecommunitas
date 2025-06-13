@@ -350,11 +350,11 @@ const {
 
 // Métodos adicionales que no están en el composable
 const handleImageError = (event) => {
-  console.error('Error loading image:', event)
+  console.error('Error loading image:', event);
   // Mostrar imagen por defecto cuando falla la carga
-  const target = event.target as HTMLImageElement
-  target.src = '/default-item.png'
-  target.alt = 'Imagen no disponible'
+  const target = event.target as HTMLImageElement;
+  target.src = '/default-item.png';
+  target.alt = 'Imagen no disponible';
 }
 
 const handleMainAction = () => {
