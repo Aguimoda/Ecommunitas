@@ -420,7 +420,7 @@ export function useServerPagination<T = any>(
     }
   }
 
-  // Watch for page changes and refetch
+  // Haer fetch de nuevo en caso de que hay nuevos resultados
   watch(
     [pagination.currentPage, pagination.pageSize],
     () => {
@@ -429,7 +429,7 @@ export function useServerPagination<T = any>(
     { immediate: true }
   )
 
-  // Refresh function
+  // Funcion refrerscar
   const refresh = (): Promise<void> => {
     return fetchData()
   }

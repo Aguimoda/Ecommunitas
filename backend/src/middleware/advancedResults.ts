@@ -86,35 +86,35 @@ const advancedResults = (model: Model<any>, populate?: string | object) => async
 ) => {
   let query;
 
-  // Copy req.query
+  // Copia req.query
   const reqQuery = { ...req.query };
 
-  // Fields to exclude
+  // Campos que se excluyen
   const removeFields = ['select', 'sort', 'page', 'limit'];
 
-  // Loop over removeFields and delete them from reqQuery
+  // Bucle por todo removeFields y borrado de reqQuery
   removeFields.forEach(param => delete reqQuery[param]);
 
-  // Create query string
+  // Crea el string para la query
   let queryStr = JSON.stringify(reqQuery);
 
-  // Create operators ($gt, $gte, etc)
+  // Operadores ($gt, $gte, etc)
   queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
-  // Finding resource
+  // Encontrar el recurso
   query = model.find(JSON.parse(queryStr));
 
-  // Select Fields
+  // Seleccionar campos relevantes
   if (req.query.select) {
     const fields = req.query.select.split(',').join(' ');
     query = query.select(fields);
   }
 
-  // Sort
+  // Ordenar usando sort
   if (req.query.sort) {
     let sortBy = req.query.sort;
     
-    // Handle special sort values
+    // Controlamos que tipo de ordenación se va a llevar a cabo
     if (sortBy === 'recent') {
       sortBy = '-createdAt';
     } else if (sortBy === 'oldest') {
@@ -125,14 +125,14 @@ const advancedResults = (model: Model<any>, populate?: string | object) => async
       sortBy = '-title';
     }
     
-    // Handle multiple sort fields
+    // Función para combinar varios tipo s de ordenación
     sortBy = sortBy.split(',').join(' ');
     query = query.sort(sortBy);
   } else {
     query = query.sort('-createdAt');
   }
 
-  // Pagination
+  // Paginación de los resultados 
   const page = parseInt(req.query.page || '1', 10) || 1;
   const limit = parseInt(req.query.limit || '25', 10) || 25;
   const startIndex = (page - 1) * limit;

@@ -776,7 +776,7 @@ export const useItemsStore = defineStore('items', () => {
     }
   }
 
-  // Load more items (for infinite scroll)
+  
   /**
    * Carga más items para scroll infinito
    * Incrementa la página actual y carga items adicionales

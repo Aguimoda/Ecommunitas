@@ -42,23 +42,23 @@ import express, { Application } from 'express';
  * ```
  */
 const fileUploadMiddleware = (app: Application) => {
-  // Create upload directory if it doesn't exist
+  // Se crea el directorio /uploads si no existe
   const uploadDir = process.env.FILE_UPLOAD_PATH || path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  // Configure file upload middleware
+  // Configura el midlleware "file upload"
   app.use(fileUpload({
     createParentPath: true,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max file size
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB es el tamaño máximo
     abortOnLimit: true,
     useTempFiles: true,
     tempFileDir: uploadDir,
     debug: process.env.NODE_ENV === 'development'
   }));
 
-  // Serve static files from the uploads directory
+  // Se sirven los archivos desde el directorio /uploads
   app.use('/uploads', express.static(path.join(uploadDir)));
 
   console.log(`File upload middleware configured. Upload directory: ${uploadDir}`);
