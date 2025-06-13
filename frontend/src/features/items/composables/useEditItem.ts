@@ -181,7 +181,7 @@ export function useEditItem(itemId: string): UseEditItemReturn {
       
       await itemsStore.updateItem(itemId, formData)
       // Artículo actualizado correctamente (sin notificación)
-      router.push(`/items/${itemId}`)
+      router.push(`/item/${itemId}`)
     } catch (error) {
       console.error('Error al actualizar el artículo:', error)
       displayError(error, { customMessage: 'Error al actualizar el artículo' })

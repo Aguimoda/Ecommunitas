@@ -238,7 +238,7 @@ export function useMessageDetail(): UseMessageDetailReturn {
 
       // Cargando conversación... (sin notificación)
       
-      const response = await messageService.getConversation(route.params.id as string)
+      const response = await messageService.getConversation(route.params.userId as string)
 
       // Validar datos de la respuesta
       if (!validateConversationData(response)) {
@@ -387,7 +387,7 @@ export function useMessageDetail(): UseMessageDetailReturn {
   })
 
   // Actualizar cuando cambie el ID de la conversación
-  watch(() => route.params.id, () => {
+  watch(() => route.params.userId, () => {
     fetchMessages()
   })
 

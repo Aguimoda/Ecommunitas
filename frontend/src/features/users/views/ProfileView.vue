@@ -109,7 +109,7 @@
       <!-- Lista de artículos -->
       <div v-else-if="Array.isArray(items) && items.length > 0" class="items-grid">
         <div v-for="item in items" :key="item._id" class="item-card">
-          <router-link :to="`/items/${item._id}`">
+          <router-link :to="`/item/${item._id}`">
             <div class="item-image">
               <img 
                 :src="(item.imageUrls && item.imageUrls.length > 0) ? item.imageUrls[0] : '/default-item.png'" 
