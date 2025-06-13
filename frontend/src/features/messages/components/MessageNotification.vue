@@ -144,10 +144,7 @@ export default {
     
     // Ir a la conversación
     const goToConversation = (userId) => {
-      router.push({ 
-        path: '/messages',
-        query: { userId }
-      });
+      router.push(`/message/${userId}`);
       closeDropdown();
       
       // Mostrar toast de confirmación

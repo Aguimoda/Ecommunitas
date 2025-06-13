@@ -78,7 +78,7 @@
     <ul v-else-if="props.conversations.length > 0" class="divide-y divide-gray-200">
       <li v-for="conversation in props.conversations" :key="conversation.withUser._id" class="py-4">
         <router-link 
-          :to="`/messages/${conversation.withUser._id}`" 
+          :to="`/message/${conversation.withUser._id}`" 
           class="block hover:bg-gray-50 p-3 rounded-lg transition-colors"
         >
           <div class="flex items-center">
