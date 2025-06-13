@@ -359,11 +359,11 @@ const handleImageError = (event) => {
 
 const handleMainAction = () => {
   if (isOwner.value) {
-    openEditModal()
+    openEditModal();
   } else {
-    openContactForm()
+    openContactForm();
   }
-}
+};
 
 const shareItem = () => {
   if (navigator.share && item.value) {
@@ -371,35 +371,35 @@ const shareItem = () => {
       title: item.value.title,
       text: item.value.description,
       url: window.location.href
-    })
+    });
   } else {
     // Fallback: copiar URL al portapapeles
-    navigator.clipboard.writeText(window.location.href)
+    navigator.clipboard.writeText(window.location.href);
     // Aquí podrías mostrar una notificación
   }
-}
+};
 
 const handleMessageSent = () => {
-  closeContactForm()
+  closeContactForm();
   // Aquí podrías mostrar una notificación de éxito
-}
+};
 
 // Precargar imágenes para mejorar la experiencia del carrusel
 const preloadImages = () => {
   if (itemImages.value && itemImages.value.length > 1) {
     itemImages.value.forEach((imageUrl, index) => {
       if (index !== currentImageIndex.value) {
-        const img = new Image()
-        img.src = imageUrl
+        const img = new Image();
+        img.src = imageUrl;
       }
-    })
+    });
   }
-}
+};
 
 // Precargar imágenes cuando cambie el artículo
 watch(itemImages, () => {
-  preloadImages()
-}, { immediate: true })
+  preloadImages();
+}, { immediate: true });
 </script>
 
 <style scoped>
